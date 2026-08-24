@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logs, dateKey, loadDeeds, loadLogs, loadQuranPrefs, shiftDays } from "@/lib/storage";
 import { bestStreak, currentStreak, dayPoints, lifetimePoints } from "@/lib/scoring";
+import { PRAYER_BN } from "@/lib/prayers";
 import StatsMore from "@/components/StatsMore";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
@@ -55,6 +56,20 @@ export default function StatsPage() {
   const fardCount = (d?: Logs[string]): number =>
     ["fajr", "dhuhr", "asr", "maghrib", "isha"].reduce((a, k) => a + (done(d, k) ? 1 : 0), 0);
 
+  // Most-missed salah insight — trailing 30 days, LOGGED days only
+  // (logged day = dateKey present in logs; unticked fard on never-logged days doesn't count).
+  const FARD_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
+  const logged30 = Array.from({ length: 30 }, (_, i) => shiftDays(today, -i))
+    .map((k) => logs[k])
+    .filter((d): d is NonNullable<Logs[string]> => !!d);
+  const missedTally = FARD_KEYS.map((k) => ({
+    k,
+    missed: logged30.filter((d) => !d[k]).length,
+  }));
+  const worstFard = [...missedTally].sort((a, b) => b.missed - a.missed)[0];
+  const bestFard = [...missedTally].sort((a, b) => a.missed - b.missed)[0];
+  const showInsight = logged30.length >= 7 && !!worstFard && !!bestFard && worstFard.missed > 0;
+
   void ROWS;
 
   return (
@@ -73,6 +88,20 @@ export default function StatsPage() {
           </div>
         ))}
       </section>
+
+      {showInsight && (
+        <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">গত ৩০ দিনের ইনসাইট</p>
+          <p className="mt-1 text-sm">
+            ⚠️ সবচেয়ে বেশি বাদ: <span className="font-semibold text-red-500">{PRAYER_BN[worstFard.k]}</span>{" "}
+            ({bnNum(worstFard.missed)}/{bnNum(logged30.length)})
+          </p>
+          <p className="text-sm">
+            ✅ সবচেয়ে নিয়মিত: <span className="font-semibold text-emerald-600">{PRAYER_BN[bestFard.k]}</span>{" "}
+            ({bnNum(logged30.length - bestFard.missed)}/{bnNum(logged30.length)})
+          </p>
+        </section>
+      )}
 
       <div className="mb-3 flex gap-2">
         {([

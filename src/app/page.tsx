@@ -101,6 +101,7 @@ export default function HomePage() {
   const qMet = qGoal > 0 && qPages >= qGoal;
   const pts = dayPoints(log, deedsMap, qGoal);
   const streak = currentStreak(logs, dateKey());
+  const remainingFards = FARD.filter((k) => !log[k]);
   const nowD = new Date();
   const mStats = monthStats(logs, nowD.getFullYear(), nowD.getMonth(), deedsMap, qGoal);
   const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
@@ -237,6 +238,13 @@ export default function HomePage() {
           <p className="text-2xl font-bold text-emerald-600">{bnNum(streak)} দিন</p>
         </div>
       </section>
+
+      {streak > 0 && remainingFards.length > 0 && (
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+          🔥 {bnNum(streak)} দিনের স্ট্রিক আজ ঝুঁকিতে — বাকি{" "}
+          {remainingFards.map((k) => PRAYER_BN[k]).join(", ")} · এখনই আদায় করুন
+        </div>
+      )}
 
       <MonthReport stats={mStats} daysInMonth={daysInMonth} />
     </>

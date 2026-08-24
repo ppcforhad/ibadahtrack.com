@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DayLog, dateKey, getDay, loadCustomZikr, saveCustomZikr, updateDay } from "@/lib/storage";
+import { DayLog, dateKey, getDay, loadCustomZikr, loadZikrPrefs, saveCustomZikr, saveZikrPrefs, updateDay } from "@/lib/storage";
 import { ZIKR_PRESETS, ZikrPreset } from "@/lib/data";
 
 const TARGETS = [33, 99, 100];
@@ -26,6 +26,11 @@ export default function ZikrPage() {
     }
     if (extra.length !== loadCustomZikr().length) saveCustomZikr(extra); // heal dupes
     setChips([...ZIKR_PRESETS, ...extra]);
+    // Restore last-used zikr + target (validated against merged chip list).
+    const prefs = loadZikrPrefs();
+    const savedSel = [...ZIKR_PRESETS, ...extra].find((z) => z.id === prefs.selId);
+    if (savedSel) setSel(savedSel);
+    if (prefs.target && TARGETS.includes(prefs.target)) setTarget(prefs.target);
   }, []);
 
   const refresh = () => setLog(getDay(dateKey()));
@@ -70,7 +75,10 @@ export default function ZikrPage() {
           value={sel.id}
           onChange={(e) => {
             const found = chips.find((z) => z.id === e.target.value);
-            if (found) setSel(found);
+            if (found) {
+              setSel(found);
+              saveZikrPrefs({ ...loadZikrPrefs(), selId: found.id });
+            }
           }}
           className="min-h-[48px] w-full appearance-none rounded-2xl border border-gray-200 bg-white px-4 pr-10 text-sm font-medium outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
         >
@@ -89,7 +97,10 @@ export default function ZikrPage() {
         {TARGETS.map((t) => (
           <button
             key={t}
-            onClick={() => setTarget(t)}
+            onClick={() => {
+              setTarget(t);
+              saveZikrPrefs({ ...loadZikrPrefs(), target: t });
+            }}
             className={
               "rounded-full px-4 py-1.5 text-sm min-h-[36px] " +
               (target === t ? "bg-emerald-100 font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "text-gray-500 dark:text-gray-400")

@@ -105,6 +105,25 @@ export function saveQuranPrefs(p: QuranPrefs): void {
   try { localStorage.setItem(QURAN_PREFS_KEY, JSON.stringify(p)); } catch { /* quota/private mode */ }
 }
 
+/* ---------- Zikr prefs (append-only v1 key) ---------- */
+
+export interface ZikrPrefs {
+  selId?: string;
+  target?: number;
+}
+
+const ZIKR_PREFS_KEY = "it_zikr_prefs_v1";
+
+/** NOT part of BACKUP_KEYS on purpose — same reason as QuranPrefs above:
+ *  prefs are optional user preferences, not essential data. */
+export function loadZikrPrefs(): ZikrPrefs {
+  try { return JSON.parse(localStorage.getItem(ZIKR_PREFS_KEY) || "{}"); } catch { return {}; }
+}
+
+export function saveZikrPrefs(p: ZikrPrefs): void {
+  try { localStorage.setItem(ZIKR_PREFS_KEY, JSON.stringify(p)); } catch { /* quota/private mode */ }
+}
+
 /* ---------- Leaderboard state (append-only v1 schema) ---------- */
 
 export interface LeaderboardState { optedIn: boolean; groups: string[] }
