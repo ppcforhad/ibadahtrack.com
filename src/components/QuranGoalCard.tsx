@@ -18,8 +18,9 @@ interface QuranGoalCardProps {
 }
 
 /** কুরআন লক্ষ্য + "শেষ অবস্থান" resume card.
- *  Goal ring/bar + resume row: searchable dropdown opening BELOW the field
- *  (never covers the page) + freely-typeable ayah input (min 1, clamped on blur). */
+ *  Goal ring/bar + resume row. The surah dropdown panel is rendered OUTSIDE
+ *  the half-width column — it spans the FULL card width so long Bangla surah
+ *  names are never squeezed. Search only activates on tap (no auto keyboard). */
 export default function QuranGoalCard({
   pages,
   goal,
@@ -100,64 +101,22 @@ export default function QuranGoalCard({
 
       {/* Resume position */}
       <p className="mb-2 mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400">শেষ অবস্থান</p>
-      <div className="relative flex items-stretch gap-2">
-        {/* Surah: custom dropdown opening DOWNWARD */}
-        <div className="relative min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={() => setOpen(!open)}
-            aria-expanded={open}
-            className="flex h-11 w-full items-center justify-between gap-1 rounded-xl border border-gray-200 bg-white px-2 text-left dark:border-gray-700 dark:bg-gray-900"
-          >
-            <span className="min-w-0 text-[11px] leading-tight text-gray-400">
-              সূরা
-              <span className="block whitespace-nowrap text-[13px] font-semibold leading-snug text-gray-900 dark:text-gray-100">
-                {surahName(surah)}
-              </span>
+      <div className="flex items-stretch gap-2">
+        {/* Surah trigger */}
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-xl border border-gray-200 bg-white px-2 text-left dark:border-gray-700 dark:bg-gray-900"
+        >
+          <span className="min-w-0 text-[11px] leading-tight text-gray-400">
+            সূরা
+            <span className="block whitespace-nowrap text-[13px] font-semibold leading-snug text-gray-900 dark:text-gray-100">
+              {surahName(surah)}
             </span>
-            <span className="shrink-0 text-[10px] text-gray-400">{open ? "▲" : "▼"}</span>
-          </button>
-
-          {open && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
-                <div className="border-b border-gray-100 p-2 dark:border-gray-800">
-                  <input
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="🔍 খুঁজতে এখানে ট্যাপ করুন…"
-                    className="h-9 w-full rounded-lg border border-gray-200 bg-white px-2 text-xs outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
-                  />
-                </div>
-                <div className="max-h-72 overflow-y-auto overscroll-contain">
-                  {filtered.map((x) => (
-                    <button
-                      key={x.n}
-                      type="button"
-                      onClick={() => selectSurah(x.n)}
-                      className={
-                        "flex min-h-[44px] w-full items-center gap-2 px-3 py-2 text-left " +
-                        (x.n === surah
-                          ? "bg-emerald-600 font-semibold text-white"
-                          : "text-gray-900 active:bg-emerald-50 dark:text-gray-100 dark:active:bg-emerald-900/40")
-                      }
-                    >
-                      <span className="w-7 shrink-0 text-[10px] tabular-nums opacity-70">{bnNum(x.n)}</span>
-                      <span className="min-w-0 flex-1 truncate text-sm">{x.bn}</span>
-                      <span className={"shrink-0 text-[10px] " + (x.n === surah ? "text-emerald-100" : "text-gray-400")}>
-                        {bnNum(x.ayahs)} আয়াত
-                      </span>
-                    </button>
-                  ))}
-                  {filtered.length === 0 && (
-                    <p className="px-3 py-3 text-center text-xs text-gray-400">পাওয়া যায়নি</p>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+          </span>
+          <span className="shrink-0 text-[10px] text-gray-400">{open ? "▲" : "▼"}</span>
+        </button>
 
         {/* Ayah: free typing, min 1 enforced on blur */}
         <label className="relative min-w-0 flex-1">
@@ -185,6 +144,48 @@ export default function QuranGoalCard({
           </span>
         </label>
       </div>
+
+      {/* Dropdown panel — OUTSIDE the flex row, spans the FULL card width */}
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="relative z-20 -mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
+            <div className="border-b border-gray-100 p-2 dark:border-gray-800">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="🔍 খুঁজতে এখানে ট্যাপ করুন…"
+                className="h-9 w-full rounded-lg border border-gray-200 bg-white px-2 text-xs outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto overscroll-contain">
+              {filtered.map((x) => (
+                <button
+                  key={x.n}
+                  type="button"
+                  onClick={() => selectSurah(x.n)}
+                  className={
+                    "flex min-h-[44px] w-full items-center gap-2 px-3 py-2 text-left " +
+                    (x.n === surah
+                      ? "bg-emerald-600 font-semibold text-white"
+                      : "text-gray-900 active:bg-emerald-50 dark:text-gray-100 dark:active:bg-emerald-900/40")
+                  }
+                >
+                  <span className="w-7 shrink-0 text-[10px] tabular-nums opacity-70">{bnNum(x.n)}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm">{x.bn}</span>
+                  <span className={"shrink-0 text-[10px] " + (x.n === surah ? "text-emerald-100" : "text-gray-400")}>
+                    {bnNum(x.ayahs)} আয়াত
+                  </span>
+                </button>
+              ))}
+              {filtered.length === 0 && (
+                <p className="px-3 py-3 text-center text-xs text-gray-400">পাওয়া যায়নি</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       <p className="mt-1 text-[10px] text-gray-400">
         {surahName(surah)} — মোট {bnNum(surahAyahs(surah))} আয়াত · আয়াত সরাসরি টাইপ করুন (সর্বনিম্ন ১)
       </p>
