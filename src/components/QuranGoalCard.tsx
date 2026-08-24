@@ -121,7 +121,7 @@ export default function QuranGoalCard({
           {open && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
+              <div className="fixed inset-x-3 z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900" style={{ top: "auto", maxWidth: "24rem", marginInline: "auto" }}>
                 <div className="border-b border-gray-100 p-2 dark:border-gray-800">
                   <input
                     autoFocus
@@ -131,22 +131,23 @@ export default function QuranGoalCard({
                     className="h-9 w-full rounded-lg border border-gray-200 bg-white px-2 text-xs outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                   />
                 </div>
-                <div className="max-h-56 overflow-y-auto overscroll-contain">
+                <div className="max-h-72 overflow-y-auto overscroll-contain">
                   {filtered.map((x) => (
                     <button
                       key={x.n}
                       type="button"
                       onClick={() => selectSurah(x.n)}
                       className={
-                        "flex min-h-[40px] w-full items-center justify-between px-3 py-2 text-left text-sm " +
+                        "flex min-h-[44px] w-full items-center gap-2 px-3 py-2 text-left " +
                         (x.n === surah
                           ? "bg-emerald-600 font-semibold text-white"
                           : "text-gray-900 active:bg-emerald-50 dark:text-gray-100 dark:active:bg-emerald-900/40")
                       }
                     >
-                      <span className="truncate">{x.bn}</span>
+                      <span className="w-7 shrink-0 text-[10px] tabular-nums opacity-70">{bnNum(x.n)}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm">{x.bn}</span>
                       <span className={"shrink-0 text-[10px] " + (x.n === surah ? "text-emerald-100" : "text-gray-400")}>
-                        {bnNum(x.n)} · {bnNum(x.ayahs)} আয়াত
+                        {bnNum(x.ayahs)} আয়াত
                       </span>
                     </button>
                   ))}
