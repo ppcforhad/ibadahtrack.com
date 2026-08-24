@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { surahAyahs, surahName } from "@/lib/surahs";
+import { useEffect, useMemo, useState } from "react";
+import { SURAHS, surahAyahs, surahName } from "@/lib/surahs";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
 
@@ -18,8 +18,8 @@ interface QuranGoalCardProps {
 }
 
 /** কুরআন লক্ষ্য + "শেষ অবস্থান" resume card.
- *  Goal ring/bar for today plus a manual resume-position row (surah/ayah
- *  steppers + save button). No auto/session tracking by design. */
+ *  Goal ring/bar + resume row: searchable dropdown opening BELOW the field
+ *  (never covers the page) + freely-typeable ayah input (min 1, clamped on blur). */
 export default function QuranGoalCard({
   pages,
   goal,
@@ -31,9 +31,16 @@ export default function QuranGoalCard({
   const [ayah, setAyah] = useState<number>(lastAyah ?? 1);
   const [saved, setSaved] = useState(false);
 
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [ayahText, setAyahText] = useState<string>(String(lastAyah ?? 1));
+
+  useEffect(() => {
+    setAyahText(String(ayah));
+  }, [ayah]);
+
   const goalOn = goal > 0;
   const pct = goalOn ? Math.max(0, Math.min(100, Math.round((pages / goal) * 100))) : 0;
-  const met = goalOn && pages >= goal;
 
   const step = (v: number, d: number, lo: number, hi: number) =>
     Math.max(lo, Math.min(hi, v + d));
@@ -41,8 +48,32 @@ export default function QuranGoalCard({
   const changeAyah = (d: number) =>
     setAyah((a) => step(a, d, 1, surahAyahs(surah)));
 
-  const shownSurah = saved ? surah : (lastSurah ?? 0);
-  const shownAyah = saved ? ayah : (lastAyah ?? 0);
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return SURAHS.map((s, i) => ({ n: i + 1, ...s })).filter(
+      (x) =>
+        needle === "" ||
+        x.bn.toLowerCase().includes(needle) ||
+        String(x.n) === needle ||
+        String(x.n).startsWith(needle)
+    );
+  }, [q]);
+
+  const selectSurah = (n: number) => {
+    setSurah(n);
+    setAyah((a) => Math.min(a, surahAyahs(n)));
+    setOpen(false);
+    setQ("");
+    setSaved(false);
+  };
+
+  /** Free typing allowed; hard-clamp to [1, surah max] when leaving the field. */
+  const commitAyah = () => {
+    const v = parseInt(ayahText, 10);
+    const clamped = Number.isNaN(v) ? 1 : Math.max(1, Math.min(surahAyahs(surah), v));
+    setAyah(clamped);
+    setSaved(false);
+  };
 
   return (
     <div className="mt-3 rounded-2xl bg-emerald-50 p-3 dark:bg-emerald-900/30">
@@ -69,42 +100,83 @@ export default function QuranGoalCard({
 
       {/* Resume position */}
       <p className="mb-2 mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400">শেষ অবস্থান</p>
-      <div className="flex items-stretch gap-2">
-        <label className="relative min-w-0 flex-1">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">সূরা</span>
-          <select
-            value={surah}
-            onChange={(e) => {
-              const next = Number(e.target.value);
-              setSurah(next);
-              setAyah((a) => Math.min(a, surahAyahs(next)));
-              setSaved(false);
-            }}
-            className="h-11 w-full appearance-none rounded-xl border border-gray-200 bg-white pl-11 pr-7 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      <div className="relative flex items-stretch gap-2">
+        {/* Surah: custom dropdown opening DOWNWARD */}
+        <div className="relative min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            className="flex h-11 w-full items-center justify-between gap-1 rounded-xl border border-gray-200 bg-white px-3 text-left dark:border-gray-700 dark:bg-gray-900"
           >
-            {Array.from({ length: 114 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}. {surahName(n)}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">▼</span>
-        </label>
+            <span className="truncate text-[11px] leading-tight text-gray-400">
+              সূরা
+              <span className="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {surahName(surah)}
+              </span>
+            </span>
+            <span className="shrink-0 text-[10px] text-gray-400">{open ? "▲" : "▼"}</span>
+          </button>
+
+          {open && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                <div className="border-b border-gray-100 p-2 dark:border-gray-800">
+                  <input
+                    autoFocus
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="সূরা খুঁজুন…"
+                    className="h-9 w-full rounded-lg border border-gray-200 bg-white px-2 text-xs outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
+                  />
+                </div>
+                <div className="max-h-56 overflow-y-auto overscroll-contain">
+                  {filtered.map((x) => (
+                    <button
+                      key={x.n}
+                      type="button"
+                      onClick={() => selectSurah(x.n)}
+                      className={
+                        "flex min-h-[40px] w-full items-center justify-between px-3 py-2 text-left text-sm " +
+                        (x.n === surah
+                          ? "bg-emerald-600 font-semibold text-white"
+                          : "text-gray-900 active:bg-emerald-50 dark:text-gray-100 dark:active:bg-emerald-900/40")
+                      }
+                    >
+                      <span className="truncate">{x.bn}</span>
+                      <span className={"shrink-0 text-[10px] " + (x.n === surah ? "text-emerald-100" : "text-gray-400")}>
+                        {bnNum(x.n)} · {bnNum(x.ayahs)} আয়াত
+                      </span>
+                    </button>
+                  ))}
+                  {filtered.length === 0 && (
+                    <p className="px-3 py-3 text-center text-xs text-gray-400">পাওয়া যায়নি</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Ayah: free typing, min 1 enforced on blur */}
         <label className="relative min-w-0 flex-1">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">আয়াত</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
-            min={1}
-            max={surahAyahs(surah)}
-            value={ayah}
+            pattern="[0-9]*"
+            value={ayahText}
             onChange={(e) => {
-              const v = Number(e.target.value);
-              if (Number.isNaN(v)) return;
-              setAyah(Math.max(1, Math.min(surahAyahs(surah), Math.floor(v))));
-              setSaved(false);
+              const raw = e.target.value.replace(/[^0-9]/g, "");
+              setAyahText(raw);
+              const v = parseInt(raw, 10);
+              if (!Number.isNaN(v) && v >= 1 && v <= surahAyahs(surah)) {
+                setAyah(v);
+                setSaved(false);
+              }
             }}
-            onBlur={() => setAyah((a) => Math.max(1, Math.min(surahAyahs(surah), a || 1)))}
+            onBlur={commitAyah}
             className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-12 pr-8 text-sm font-semibold tabular-nums text-gray-900 outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
           <span className="pointer-events-none absolute right-2.5 top-1/2 flex -translate-y-1/2 flex-col leading-none">
@@ -114,7 +186,7 @@ export default function QuranGoalCard({
         </label>
       </div>
       <p className="mt-1 text-[10px] text-gray-400">
-        {surahName(surah)} — মোট {bnNum(surahAyahs(surah))} আয়াত · সরাসরি টাইপ করা যাবে
+        {surahName(surah)} — মোট {bnNum(surahAyahs(surah))} আয়াত · আয়াত সরাসরি টাইপ করুন (সর্বনিম্ন ১)
       </p>
       <button
         onClick={() => { onSaveResume(surah, ayah); setSaved(true); }}
@@ -122,9 +194,9 @@ export default function QuranGoalCard({
       >
         💾 অবস্থান সেভ করুন
       </button>
-      {shownSurah > 0 && (
+      {(saved || (lastSurah && lastAyah)) && (
         <p className="mt-2 text-center text-xs font-medium text-emerald-700 dark:text-emerald-300">
-          যেখানে থেমেছিলেন: সূরা {surahName(shownSurah)}, আয়াত {bnNum(shownAyah)}
+          যেখানে থেমেছিলেন: সূরা {surahName(saved ? surah : (lastSurah as number))}, আয়াত {bnNum(saved ? ayah : (lastAyah as number))}
         </p>
       )}
     </div>
