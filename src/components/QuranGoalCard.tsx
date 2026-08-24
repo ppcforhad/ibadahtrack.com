@@ -38,11 +38,6 @@ export default function QuranGoalCard({
   const step = (v: number, d: number, lo: number, hi: number) =>
     Math.max(lo, Math.min(hi, v + d));
 
-  const changeSurah = (d: number) => {
-    const next = step(surah, d, 1, 114);
-    setSurah(next);
-    setAyah((a) => Math.min(a, surahAyahs(next)));
-  };
   const changeAyah = (d: number) =>
     setAyah((a) => step(a, d, 1, surahAyahs(surah)));
 
@@ -75,21 +70,52 @@ export default function QuranGoalCard({
       {/* Resume position */}
       <p className="mb-2 mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400">শেষ অবস্থান</p>
       <div className="flex items-stretch gap-2">
-        <div className="flex min-w-0 flex-1 items-center justify-between rounded-xl border border-gray-200 bg-white px-2 dark:border-gray-700 dark:bg-gray-900">
-          <button type="button" aria-label="সূরা কমান" onClick={() => changeSurah(-1)} className="h-11 w-8 shrink-0 text-lg text-gray-500 active:scale-95">−</button>
-          <span className="min-w-0 flex-1 text-center text-[11px] text-gray-400">
-            সূরা<span className="block truncate text-sm font-bold text-gray-900 dark:text-gray-100">{surahName(surah)}</span>
+        <label className="relative min-w-0 flex-1">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">সূরা</span>
+          <select
+            value={surah}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              setSurah(next);
+              setAyah((a) => Math.min(a, surahAyahs(next)));
+              setSaved(false);
+            }}
+            className="h-11 w-full appearance-none rounded-xl border border-gray-200 bg-white pl-11 pr-7 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            {Array.from({ length: 114 }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                {n}. {surahName(n)}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">▼</span>
+        </label>
+        <label className="relative min-w-0 flex-1">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">আয়াত</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={surahAyahs(surah)}
+            value={ayah}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (Number.isNaN(v)) return;
+              setAyah(Math.max(1, Math.min(surahAyahs(surah), Math.floor(v))));
+              setSaved(false);
+            }}
+            onBlur={() => setAyah((a) => Math.max(1, Math.min(surahAyahs(surah), a || 1)))}
+            className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-12 pr-8 text-sm font-semibold tabular-nums text-gray-900 outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+          <span className="pointer-events-none absolute right-2.5 top-1/2 flex -translate-y-1/2 flex-col leading-none">
+            <button type="button" aria-label="আয়াত বাড়ান" onClick={() => changeAyah(1)} className="px-1 text-[9px] text-emerald-600">▲</button>
+            <button type="button" aria-label="আয়াত কমান" onClick={() => changeAyah(-1)} className="px-1 text-[9px] text-gray-400">▼</button>
           </span>
-          <button type="button" aria-label="সূরা বাড়ান" onClick={() => changeSurah(1)} className="h-11 w-8 shrink-0 text-lg text-emerald-600 active:scale-95">+</button>
-        </div>
-        <div className="flex min-w-0 flex-1 items-center justify-between rounded-xl border border-gray-200 bg-white px-2 dark:border-gray-700 dark:bg-gray-900">
-          <button type="button" aria-label="আয়াত কমান" onClick={() => changeAyah(-1)} className="h-11 w-8 shrink-0 text-lg text-gray-500 active:scale-95">−</button>
-          <span className="min-w-0 flex-1 text-center text-[11px] text-gray-400">
-            আয়াত<span className="block text-sm font-bold tabular-nums text-gray-900 dark:text-gray-100">{bnNum(ayah)}</span>
-          </span>
-          <button type="button" aria-label="আয়াত বাড়ান" onClick={() => changeAyah(1)} className="h-11 w-8 shrink-0 text-lg text-emerald-600 active:scale-95">+</button>
-        </div>
+        </label>
       </div>
+      <p className="mt-1 text-[10px] text-gray-400">
+        {surahName(surah)} — মোট {bnNum(surahAyahs(surah))} আয়াত · সরাসরি টাইপ করা যাবে
+      </p>
       <button
         onClick={() => { onSaveResume(surah, ayah); setSaved(true); }}
         className="mt-2 min-h-[44px] w-full rounded-xl bg-[#059669] text-sm font-semibold text-white active:scale-[0.99]"
