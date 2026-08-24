@@ -10,7 +10,9 @@ import {
   loadDeeds,
   loadLogs,
   saveDeeds,
+  loadQuranPrefs,
 } from "@/lib/storage";
+import { QURAN_TOTAL_PAGES, percentKhatam } from "@/lib/quran";
 import { computeBadges, topDays } from "@/lib/badges";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
@@ -38,19 +40,31 @@ export default function StatsMore() {
   const [open, setOpen] = useState<PanelId | null>(null);
   const [logs, setLogs] = useState<Logs>({});
   const [deeds, setDeeds] = useState<CustomDeed[]>([]);
+  const [qGoal, setQGoal] = useState(0);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
     setLogs(loadLogs());
     setDeeds(loadDeeds());
+    setQGoal(loadQuranPrefs().goalPagesPerDay ?? 0);
   }, []);
 
   if (!mounted) return null;
 
   const deedsMap = new Map(deeds.map((d) => [d.id, d.pts]));
-  const top = topDays(logs, deedsMap, 10);
+  const top = topDays(logs, deedsMap, 10, qGoal);
   const badges = computeBadges(logs);
+
+  // Lifetime khatam progress: pure math over loaded logs (604-page mushaf).
+  const totalPages = Object.values(logs).reduce((a, d) => a + (d.quranPages ?? 0), 0);
+  const khatamPct = Math.round(percentKhatam(totalPages));
+  const nowD = new Date();
+  const monthPrefix =
+    nowD.getFullYear() + "-" + String(nowD.getMonth() + 1).padStart(2, "0") + "-";
+  const monthPages = Object.keys(logs)
+    .filter((k) => k.startsWith(monthPrefix))
+    .reduce((a, k) => a + (logs[k].quranPages ?? 0), 0);
 
   const doExport = () => {
     try {
@@ -133,6 +147,19 @@ export default function StatsMore() {
             <span className="block text-[10px] text-gray-400">{o.sub}</span>
           </button>
         ))}
+      </div>
+
+      {/* Lifetime Quran khatam progress */}
+      <div className="mt-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/30">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">📖 খতম অগ্রগতি</span>
+          <span className="shrink-0 rounded-full bg-[#059669] px-2 py-0.5 text-xs font-semibold tabular-nums text-white">
+            প্রায় {bnNum(khatamPct)}% খতম
+          </span>
+        </div>
+        <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+          মোট {bnNum(totalPages)} পৃষ্ঠা · এই মাস {bnNum(monthPages)} পৃষ্ঠা ({bnNum(QURAN_TOTAL_PAGES)} পৃষ্ঠায় ১ খতম)
+        </p>
       </div>
 
       {open === "top" && (

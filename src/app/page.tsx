@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { DayLog, Settings, dateKey, getDay, loadDeeds, loadLogs, loadSettings, updateDay } from "@/lib/storage";
+import { DayLog, Settings, dateKey, getDay, loadDeeds, loadLogs, loadQuranPrefs, loadSettings, saveQuranPrefs, updateDay } from "@/lib/storage";
 import { PRAYER_BN, nextPrayer } from "@/lib/prayers";
 import { currentStreak, dayPoints, monthStats } from "@/lib/scoring";
 import CustomDeeds from "@/components/CustomDeeds";
 import MonthReport from "@/components/MonthReport";
+import QuranGoalCard from "@/components/QuranGoalCard";
 
 const FARD = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
 const EN: Record<string, string> = { fajr: "Fajr", dhuhr: "Dhuhr", asr: "Asr", maghrib: "Maghrib", isha: "Isha" };
@@ -78,10 +79,14 @@ export default function HomePage() {
 
   const logs = loadLogs();
   const deedsMap = new Map(loadDeeds().map((x) => [x.id, x.pts]));
-  const pts = dayPoints(log, deedsMap);
+  const qPrefs = loadQuranPrefs();
+  const qGoal = qPrefs.goalPagesPerDay ?? 0;
+  const qPages = log.quranPages ?? 0;
+  const qMet = qGoal > 0 && qPages >= qGoal;
+  const pts = dayPoints(log, deedsMap, qGoal);
   const streak = currentStreak(logs, dateKey());
   const nowD = new Date();
-  const mStats = monthStats(logs, nowD.getFullYear(), nowD.getMonth(), deedsMap);
+  const mStats = monthStats(logs, nowD.getFullYear(), nowD.getMonth(), deedsMap, qGoal);
   const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
 
   const act = (fn: () => void) => { fn(); refresh(); };
@@ -90,6 +95,9 @@ export default function HomePage() {
   const toggleTahajjud = () => act(() => updateDay(dateKey(), (d) => ({ ...d, tahajjud: !d.tahajjud })));
   const setQuran = (v: number) =>
     act(() => updateDay(dateKey(), (d) => ({ ...d, quranPages: Math.max(0, v || 0) })));
+  // Merge so an existing goalPagesPerDay is never erased by a resume save.
+  const saveResume = (surah: number, ayah: number) =>
+    act(() => saveQuranPrefs({ ...loadQuranPrefs(), lastSurah: surah, lastAyah: ayah }));
 
   return (
     <>
@@ -163,11 +171,41 @@ export default function HomePage() {
       <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
         <h3 className="mb-3 text-sm font-semibold">📖 কুরআন পড়া (পৃষ্ঠা)</h3>
         <div className="flex items-center justify-center gap-8">
-          <button onClick={() => setQuran((log.quranPages ?? 0) - 1)} className="h-12 w-12 rounded-full bg-gray-100 text-2xl active:scale-95 dark:bg-gray-800">−</button>
-          <span className="min-w-[3rem] text-center text-2xl font-bold tabular-nums">{bnNum(log.quranPages ?? 0)}</span>
-          <button onClick={() => setQuran((log.quranPages ?? 0) + 1)} className="h-12 w-12 rounded-full bg-emerald-600 text-2xl text-white active:scale-95">+</button>
+          <button onClick={() => setQuran(qPages - 1)} className="h-12 w-12 rounded-full bg-gray-100 text-2xl active:scale-95 dark:bg-gray-800">−</button>
+          <span className="min-w-[3rem] text-center text-2xl font-bold tabular-nums">{bnNum(qPages)}</span>
+          <button onClick={() => setQuran(qPages + 1)} className="h-12 w-12 rounded-full bg-emerald-600 text-2xl text-white active:scale-95">+</button>
         </div>
-        {(log.quranPages ?? 0) > 0 && <p className="mt-2 text-center text-xs font-medium text-emerald-600">✅ +৫ পয়েন্ট</p>}
+        {(qPages) > 0 && <p className="mt-2 text-center text-xs font-medium text-emerald-600">✅ +৫ পয়েন্ট</p>}
+        {qGoal > 0 && (
+          <div className="mt-3">
+            <div className="mb-1 flex items-center justify-between text-xs">
+              <span className={qMet ? "font-semibold text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400"}>
+                আজ {bnNum(qPages)}/{bnNum(qGoal)} পৃষ্ঠা
+              </span>
+              {qMet && <span className="font-semibold text-emerald-600 dark:text-emerald-400">লক্ষ্য পূরণ ✅ (+১০)</span>}
+            </div>
+            <div
+              role="progressbar"
+              aria-valuenow={Math.min(100, Math.round((qPages / qGoal) * 100))}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="আজকের কুরআন লক্ষ্য"
+              className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800"
+            >
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${Math.min(100, (qPages / qGoal) * 100)}%`, backgroundColor: "#059669" }}
+              />
+            </div>
+          </div>
+        )}
+        <QuranGoalCard
+          pages={qPages}
+          goal={qGoal}
+          lastSurah={qPrefs.lastSurah}
+          lastAyah={qPrefs.lastAyah}
+          onSaveResume={saveResume}
+        />
       </section>
 
       <CustomDeeds onChanged={refresh} />

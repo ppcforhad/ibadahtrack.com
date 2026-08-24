@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Logs, dateKey, loadDeeds, loadLogs, shiftDays } from "@/lib/storage";
+import { Logs, dateKey, loadDeeds, loadLogs, loadQuranPrefs, shiftDays } from "@/lib/storage";
 import { bestStreak, currentStreak, dayPoints, lifetimePoints } from "@/lib/scoring";
 import StatsMore from "@/components/StatsMore";
 
@@ -24,6 +24,7 @@ export default function StatsPage() {
 
   const today = dateKey();
   const deedsMap = new Map(loadDeeds().map((x) => [x.id, x.pts]));
+  const qGoal = loadQuranPrefs().goalPagesPerDay ?? 0;
 
   const done = (d: Logs[string] | undefined, kind: string): boolean => {
     if (!d) return false;
@@ -62,7 +63,7 @@ export default function StatsPage() {
 
       <section className="mb-4 grid grid-cols-3 gap-2">
         {[
-          { label: "মোট পয়েন্ট", val: bnNum(lifetimePoints(logs, deedsMap)) },
+          { label: "মোট পয়েন্ট", val: bnNum(lifetimePoints(logs, deedsMap, qGoal)) },
           { label: "🔥 চলতি স্ট্রিক", val: bnNum(currentStreak(logs, today)) },
           { label: "🏆 সেরা স্ট্রিক", val: bnNum(bestStreak(logs)) },
         ].map((c) => (

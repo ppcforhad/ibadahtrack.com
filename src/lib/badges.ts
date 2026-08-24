@@ -4,10 +4,11 @@ import { Logs } from "./storage";
 export interface TopDay { key: string; pts: number }
 
 /** Personal top-N days ranked by dayPoints desc (ties → newer date first).
- *  Days with 0 points are excluded so empty log shells never rank. */
-export function topDays(logs: Logs, deedsMap?: Map<string, number>, n = 10): TopDay[] {
+ *  Days with 0 points are excluded so empty log shells never rank.
+ *  quranGoal (default 0) threads the daily-goal bonus into rankings. */
+export function topDays(logs: Logs, deedsMap?: Map<string, number>, n = 10, quranGoal = 0): TopDay[] {
   return Object.keys(logs)
-    .map((key) => ({ key, pts: dayPoints(logs[key], deedsMap) }))
+    .map((key) => ({ key, pts: dayPoints(logs[key], deedsMap, quranGoal) }))
     .filter((d) => d.pts > 0)
     .sort((a, b) => b.pts - a.pts || (a.key < b.key ? 1 : -1))
     .slice(0, n);

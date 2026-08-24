@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Logs, loadDeeds, loadLogs } from "@/lib/storage";
+import { Logs, loadDeeds, loadLogs, loadQuranPrefs } from "@/lib/storage";
 import { lifetimePoints, monthStats } from "@/lib/scoring";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
@@ -47,8 +47,8 @@ export default function LeaderboardPage() {
   // (same pattern as stats/page.tsx).
   const deedsMap = new Map(loadDeeds().map((x) => [x.id, x.pts]));
 
-  const userMonthPts = monthStats(logs, y, m, deedsMap).totalPoints;
-  const userAllPts = lifetimePoints(logs, deedsMap);
+  const userMonthPts = monthStats(logs, y, m, deedsMap, loadQuranPrefs().goalPagesPerDay ?? 0).totalPoints;
+  const userAllPts = lifetimePoints(logs, deedsMap, loadQuranPrefs().goalPagesPerDay ?? 0);
 
   type Row = { name: string; pts: number; isUser?: boolean };
   const rows: Row[] = [

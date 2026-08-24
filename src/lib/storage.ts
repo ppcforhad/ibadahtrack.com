@@ -84,6 +84,27 @@ export function saveCustomZikr(z: ZikrPreset[]): void {
   localStorage.setItem(ZIKR_CUSTOM_KEY, JSON.stringify(z));
 }
 
+/* ---------- Quran goal & resume prefs (append-only v1 key) ---------- */
+
+export interface QuranPrefs {
+  goalPagesPerDay?: number;
+  lastSurah?: number;
+  lastAyah?: number;
+}
+
+const QURAN_PREFS_KEY = "it_quran_prefs_v1";
+
+/** NOT part of BACKUP_KEYS on purpose: importData rejects backups missing any
+ *  BACKUP_KEYS entry, so adding this key would break restoring every existing
+ *  backup file. Prefs are optional user preferences, not essential data. */
+export function loadQuranPrefs(): QuranPrefs {
+  try { return JSON.parse(localStorage.getItem(QURAN_PREFS_KEY) || "{}"); } catch { return {}; }
+}
+
+export function saveQuranPrefs(p: QuranPrefs): void {
+  try { localStorage.setItem(QURAN_PREFS_KEY, JSON.stringify(p)); } catch { /* quota/private mode */ }
+}
+
 /* ---------- Leaderboard state (append-only v1 schema) ---------- */
 
 export interface LeaderboardState { optedIn: boolean; groups: string[] }

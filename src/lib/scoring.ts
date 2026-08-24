@@ -6,15 +6,19 @@ export function allFive(d?: DayLog): boolean {
   return !!d && FARDS.every((k) => !!d[k]);
 }
 
-/** Fard 10 pts each, Fajr +5 bonus, all-5 +20 bonus, Quran >=1 page +5,
+/** Fard 10 pts each (Fajr 15), Fajr +5 bonus, all-5 +20 bonus, Quran >=1 page +5,
+ *  Quran daily-goal bonus +10 when quranGoal > 0 and pages read >= goal,
  *  Zikr +2 per completed 100 (cap 10/day), Dua read +1 each (cap 5/day),
- *  custom deeds add their own point values via deedsMap (loaded by caller). */
-export function dayPoints(d?: DayLog, deedsMap?: Map<string, number>): number {
+ *  custom deeds add their own point values via deedsMap (loaded by caller).
+ *  quranGoal defaults to 0 → no goal bonus, identical to pre-goal scoring. */
+export function dayPoints(d?: DayLog, deedsMap?: Map<string, number>, quranGoal = 0): number {
   if (!d) return 0;
   let p = 0;
   FARDS.forEach((k, i) => { if (d[k]) p += i === 0 ? 15 : 10; });
   if (allFive(d)) p += 20;
-  if ((d.quranPages ?? 0) > 0) p += 5;
+  const qp = d.quranPages ?? 0;
+  if (qp > 0) p += 5;
+  if (quranGoal > 0 && qp >= quranGoal) p += 10;
   const zTotal = Object.values(d.zikrCounts ?? {}).reduce((a, b) => a + (b || 0), 0);
   p += Math.min(10, Math.floor(zTotal / 100) * 2);
   p += Math.min(5, d.duasRead?.length ?? 0);
@@ -47,8 +51,8 @@ export function bestStreak(logs: Logs): number {
   return best;
 }
 
-export function lifetimePoints(logs: Logs, deedsMap?: Map<string, number>): number {
-  return Object.values(logs).reduce((a, d) => a + dayPoints(d, deedsMap), 0);
+export function lifetimePoints(logs: Logs, deedsMap?: Map<string, number>, quranGoal = 0): number {
+  return Object.values(logs).reduce((a, d) => a + dayPoints(d, deedsMap, quranGoal), 0);
 }
 
 export interface MonthStats {
@@ -58,13 +62,15 @@ export interface MonthStats {
 /** Stats for calendar month m (0-based) of year y.
  *  activeDays counts days with dayPoints > 0 (empty log shells don't count);
  *  bestFardDay is the highest fard count reached on any single day (tie → first). */
-export function monthStats(logs: Logs, y: number, m: number, deedsMap?: Map<string, number>): MonthStats {
+export function monthStats(
+  logs: Logs, y: number, m: number, deedsMap?: Map<string, number>, quranGoal = 0
+): MonthStats {
   const prefix = y + "-" + String(m + 1).padStart(2, "0") + "-";
   const keys = Object.keys(logs).filter((k) => k.startsWith(prefix)).sort();
   let totalPoints = 0, activeDays = 0, quranPages = 0, bestFardDay = 0;
   for (const k of keys) {
     const d = logs[k];
-    const p = dayPoints(d, deedsMap);
+    const p = dayPoints(d, deedsMap, quranGoal);
     totalPoints += p;
     if (p > 0) activeDays++;
     quranPages += d.quranPages ?? 0;

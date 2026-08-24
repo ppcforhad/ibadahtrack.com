@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: "ইবাদাত ট্র্যাকার · Ibadah Tracker",
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-sans">
+        <ServiceWorkerRegister />
         <main className="mx-auto w-full max-w-lg px-4 pb-28 pt-4">{children}</main>
         <BottomNav />
       </body>
