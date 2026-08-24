@@ -283,22 +283,24 @@ function QuranReaderInner(p: ReaderProps) {
   }
 
   return (
-    <div className={"fixed inset-0 z-50 flex flex-col bg-gray-50 dark:bg-gray-950" + (directMode ? "" : "")}>
+    <div className={directMode
+      ? "flex h-[75vh] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950"
+      : "fixed inset-0 z-50 flex flex-col bg-gray-50 dark:bg-gray-950"}>
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
         <div className="flex items-center gap-2">
-          {/* Back button: reading view → list; list → exit (direct mode) or close */}
-          <button
-            onClick={() => {
-              if (view === "read") setView("list");
-              else if (!directMode) setOpen(false);
-              else setOpen(false);
-            }}
-            aria-label={view === "read" ? "পিছনে" : "বন্ধ করুন"}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gray-100 text-lg text-gray-600 transition active:scale-95 dark:bg-gray-800 dark:text-gray-300"
-          >
-            {view === "read" ? "←" : "✕"}
-          </button>
+          {!(directMode && view === "list") && (
+            <button
+              onClick={() => {
+                if (view === "read") setView("list");
+                else setOpen(false);
+              }}
+              aria-label={view === "read" ? "পিছনে" : "বন্ধ করুন"}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gray-100 text-lg text-gray-600 transition active:scale-95 dark:bg-gray-800 dark:text-gray-300"
+            >
+              {view === "read" ? "←" : "✕"}
+            </button>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate font-bold text-emerald-700 dark:text-emerald-400">
               📖 {view === "read" ? surahName(current) : "সম্পূর্ণ কুরআন"}
@@ -483,7 +485,7 @@ function QuranReaderInner(p: ReaderProps) {
           </div>
 
           {/* Bottom nav bar */}
-          <nav className="safe-bottom fixed inset-x-0 bottom-0 z-10 border-t border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+          <nav className={(directMode ? "sticky bottom-0 " : "safe-bottom fixed inset-x-0 bottom-0 z-10 ") + "border-t border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95"}>
             <div className="mx-auto flex max-w-2xl items-stretch">
               <button
                 disabled={current <= 1 || loading}
