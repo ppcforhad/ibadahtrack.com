@@ -284,7 +284,7 @@ function QuranReaderInner(p: ReaderProps) {
 
   return (
     <div className={directMode
-      ? "flex h-[calc(100vh-13rem)] min-h-[420px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950"
+      ? "flex h-[calc(100vh-16.5rem)] min-h-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950"
       : "fixed inset-0 z-50 flex flex-col bg-gray-50 dark:bg-gray-950"}>
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
