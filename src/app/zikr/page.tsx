@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DayLog, dateKey, getDay, loadCustomZikr, loadZikrPrefs, saveCustomZikr, saveZikrPrefs, updateDay } from "@/lib/storage";
 import { ZIKR_PRESETS, ZikrPreset } from "@/lib/data";
 
 const TARGETS = [33, 99, 100];
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
+
+/** Category display order for the optgroup dropdown. */
+const CAT_ORDER = ["তাসবীহ", "দুরুদ", "ইস্তিগফার", "কালিমা", "দুআ"];
+const CUSTOM_CAT = "আমার যিকির";
 
 export default function ZikrPage() {
   const [mounted, setMounted] = useState(false);
@@ -34,6 +38,20 @@ export default function ZikrPage() {
   }, []);
 
   const refresh = () => setLog(getDay(dateKey()));
+
+  /** Group chips by category (built-ins first in CAT_ORDER, custom last). */
+  const groups = useMemo(() => {
+    const byCat = new Map<string, ZikrPreset[]>();
+    for (const z of chips) {
+      const g = z.cat ?? CUSTOM_CAT;
+      if (!byCat.has(g)) byCat.set(g, []);
+      byCat.get(g)!.push(z);
+    }
+    const ordered: [string, ZikrPreset[]][] = [];
+    for (const cat of CAT_ORDER) if (byCat.has(cat)) ordered.push([cat, byCat.get(cat)!]);
+    for (const [cat, items] of byCat) if (!CAT_ORDER.includes(cat)) ordered.push([cat, items]);
+    return ordered;
+  }, [chips]);
 
   if (!mounted) return <p className="py-20 text-center text-gray-400">লোড হচ্ছে…</p>;
 
@@ -82,13 +100,23 @@ export default function ZikrPage() {
           }}
           className="min-h-[48px] w-full appearance-none rounded-2xl border border-gray-200 bg-white px-4 pr-10 text-sm font-medium outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
         >
-          {chips.map((z) => (
-            <option key={z.id} value={z.id}>
-              {z.bn}
-            </option>
+          {groups.map(([cat, items]) => (
+            <optgroup key={cat} label={cat}>
+              {items.map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.bn}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
         <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">▼</span>
+      </div>
+
+      <div className="mb-2 flex justify-center">
+        <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+          📁 {sel.cat ?? CUSTOM_CAT}
+        </span>
       </div>
 
       <p className="arabic-text mb-1 text-center font-semibold">{sel.ar}</p>

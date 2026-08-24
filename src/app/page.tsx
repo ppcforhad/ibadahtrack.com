@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { DayLog, Settings, dateKey, getDay, loadDeeds, loadLogs, loadQuranPrefs, loadSettings, saveQuranPrefs, updateDay } from "@/lib/storage";
 import { PRAYER_BN, nextPrayer, todayTimes } from "@/lib/prayers";
 import { currentStreak, dayPoints, monthStats } from "@/lib/scoring";
 import MyAmolList from "@/components/MyAmolList";
-import SyncChip from "@/components/SyncChip";
+import ProfileMenu from "@/components/ProfileMenu";
 import MonthReport from "@/components/MonthReport";
 import QuranGoalCard from "@/components/QuranGoalCard";
 
@@ -127,12 +126,7 @@ export default function HomePage() {
             {hijri ? " · " + hijri : ""}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <SyncChip />
-          <Link href="/settings" aria-label="সেটিংস" className="rounded-full border border-gray-200 bg-white p-2 text-lg dark:border-gray-700 dark:bg-gray-900">
-            ⚙️
-          </Link>
-        </div>
+        <ProfileMenu />
       </header>
 
       <section className="mb-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-5 text-white shadow-lg">

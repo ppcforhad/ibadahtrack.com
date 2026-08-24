@@ -4,15 +4,20 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { QuranPrefs, Settings, loadQuranPrefs, loadSettings, saveQuranPrefs, saveSettings } from "@/lib/storage";
 import { CITIES, METHODS } from "@/lib/prayers";
+import { loadProfile, type Profile } from "@/lib/profile";
+import ProfileEdit from "@/components/ProfileEdit";
 
 export default function SettingsPage() {
   const [s, setS] = useState<Settings | null>(null);
   const [qp, setQp] = useState<QuranPrefs>({});
+  const [prof, setProf] = useState<Profile>({});
+  const [editOpen, setEditOpen] = useState(false);
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
     setS(loadSettings());
     setQp(loadQuranPrefs());
+    setProf(loadProfile());
   }, []);
 
   if (!s) return <p className="py-20 text-center text-gray-400">লোড হচ্ছে…</p>;
@@ -54,6 +59,31 @@ export default function SettingsPage() {
         <h1 className="text-lg font-bold">⚙️ সেটিংস</h1>
         <Link href="/" className="text-sm text-emerald-600">← হোম</Link>
       </div>
+
+      {/* 👤 Profile section (name + photo + edit) */}
+      <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+        <h3 className="mb-3 text-sm font-semibold">👤 প্রোফাইল</h3>
+        <div className="flex items-center gap-3">
+          {prof.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element -- base64 dataURL cannot go through next/image
+            <img src={prof.photo} alt="প্রোফাইল ছবি" className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-emerald-500/40" />
+          ) : (
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-lg font-bold text-white">
+              {(prof.name || "👤").trim().charAt(0).toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{prof.name || "নাম দেওয়া হয়নি"}</p>
+            {prof.email && <p className="truncate text-xs text-gray-500 dark:text-gray-400">{prof.email}</p>}
+          </div>
+          <button
+            onClick={() => setEditOpen(true)}
+            className="min-h-[44px] shrink-0 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition active:scale-[0.98]"
+          >
+            ✏️ সম্পাদনা
+          </button>
+        </div>
+      </section>
 
       <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
         <h3 className="mb-2 text-sm font-semibold">📍 শহর</h3>
@@ -147,6 +177,8 @@ export default function SettingsPage() {
       </section>
 
       {msg && <p className="text-center text-sm font-medium text-emerald-600">{msg}</p>}
+
+      <ProfileEdit open={editOpen} onClose={() => { setEditOpen(false); setProf(loadProfile()); }} />
     </>
   );
 }

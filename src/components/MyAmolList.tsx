@@ -36,6 +36,20 @@ const SUGGESTED: Item[] = [
   { key: "s_good_words", bn: "ভালো কথা বলা", pts: 5 },
   { key: "s_smile_salam", bn: "হাসিমুখে সালাম", pts: 5 },
   { key: "s_help_others", bn: "অন্যকে সাহায্য", pts: 10 },
+  { key: "s_tahajjud_read", bn: "তাহাজ্জুদ পড়া", pts: 20 },
+  { key: "s_night_ibadah", bn: "রাত জাগা ইবাদত", pts: 15 },
+  { key: "s_wudu_sahih", bn: "ওজু সহিহ করা", pts: 5 },
+  { key: "s_mosjid_before_azan", bn: "মসজিদে আজানের আগে পৌঁছানো", pts: 10 },
+  { key: "s_surah_kahf", bn: "সূরা কাহফ তিলাওয়াত (শুক্রবার)", pts: 15 },
+  { key: "s_sissta", bn: "সিস্তা (নখ/দাড়ি)", pts: 5 },
+  { key: "s_miswak", bn: "মিসওয়াক", pts: 5 },
+  { key: "s_mosjid_nafl", bn: "বিনা কারণে মসজিদে যাওয়া", pts: 10 },
+  { key: "s_zikr_morning_evening", bn: "দুই বেলা সকাল-সন্ধ্যার জিকির", pts: 10 },
+  { key: "s_ilm_study", bn: "পড়াশোনা/ইলম অর্জন", pts: 10 },
+  { key: "s_children_rights", bn: "সন্তানের অধিকার পালন", pts: 10 },
+  { key: "s_spouse_rights", bn: "স্বামী-স্ত্রীর হক আদায়", pts: 10 },
+  { key: "s_silatur_rahim", bn: "আত্মীয়তা বাঁধা (সিলাতুর রাহিম)", pts: 15 },
+  { key: "s_orphan_kindness", bn: "এতিমের প্রতি দয়া", pts: 15 },
 ];
 
 /** "আমার আমল" — unified daily deed checklist: fard salahs first, then every
