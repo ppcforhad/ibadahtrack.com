@@ -124,10 +124,9 @@ export default function QuranGoalCard({
               <div className="fixed inset-x-3 z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900" style={{ top: "auto", maxWidth: "24rem", marginInline: "auto" }}>
                 <div className="border-b border-gray-100 p-2 dark:border-gray-800">
                   <input
-                    autoFocus
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    placeholder="সূরা খুঁজুন…"
+                    placeholder="🔍 খুঁজতে এখানে ট্যাপ করুন…"
                     className="h-9 w-full rounded-lg border border-gray-200 bg-white px-2 text-xs outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
                   />
                 </div>
