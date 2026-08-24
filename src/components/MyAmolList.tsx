@@ -101,9 +101,12 @@ export default function MyAmolList({ onChanged }: { onChanged?: () => void }) {
     setShowCustom(false);
   };
 
-  /** One tap on a suggested amal → add it permanently to my list. */
+  /** One tap adds to my list; another tap removes it again. */
   const addSuggested = (item: Item) => {
-    if (deeds.some((d) => d.id === item.key)) return;
+    if (deeds.some((d) => d.id === item.key)) {
+      act(() => saveDeeds(deeds.filter((d) => d.id !== item.key)));
+      return;
+    }
     act(() => saveDeeds([...deeds, { id: item.key, bn: item.bn, pts: item.pts ?? 5 }]));
   };
 
@@ -211,13 +214,12 @@ export default function MyAmolList({ onChanged }: { onChanged?: () => void }) {
                     <button
                       key={s.key}
                       onClick={() => addSuggested(s)}
-                      disabled={added}
-                      title={added ? "already added" : undefined}
+                      title={added ? "আবার ট্যাপ করলে বাদ যাবে" : "ট্যাপ করলে যোগ হবে"}
                       className={
                         "min-h-[36px] rounded-full border px-3 py-1.5 text-xs transition active:scale-95 " +
                         (added
-                          ? "cursor-default border-emerald-200 bg-emerald-50 text-emerald-500 line-through opacity-70 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-600"
-                          : "border-gray-200 bg-white font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200")
+                          ? "border-emerald-500 bg-emerald-600 font-medium text-white dark:border-emerald-500"
+                          : "border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200")
                       }
                     >
                       {added ? "✓ " : "+ "}

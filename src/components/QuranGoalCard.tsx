@@ -107,11 +107,11 @@ export default function QuranGoalCard({
             type="button"
             onClick={() => setOpen(!open)}
             aria-expanded={open}
-            className="flex h-11 w-full items-center justify-between gap-1 rounded-xl border border-gray-200 bg-white px-3 text-left dark:border-gray-700 dark:bg-gray-900"
+            className="flex h-11 w-full items-center justify-between gap-1 rounded-xl border border-gray-200 bg-white px-2 text-left dark:border-gray-700 dark:bg-gray-900"
           >
-            <span className="truncate text-[11px] leading-tight text-gray-400">
+            <span className="min-w-0 text-[11px] leading-tight text-gray-400">
               সূরা
-              <span className="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <span className="block whitespace-nowrap text-[13px] font-semibold leading-snug text-gray-900 dark:text-gray-100">
                 {surahName(surah)}
               </span>
             </span>
