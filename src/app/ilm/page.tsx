@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { KALIMAS } from "@/lib/data";
-import { AYATUL_KURSI, QULS } from "@/lib/data";
-import { IMPORTANT_AYAT, SURAH_FATIHA } from "@/lib/ilm";
 import QuranReader from "./quran-reader";
 import {
   HADITHS_25,
@@ -54,57 +52,10 @@ export default function IlmPage() {
         </div>
       </div>
 
-      {/* ---------------- কুরআন: রিডার + ফজিলতপূর্ণ সূরা/আয়াত ---------------- */}
+      {/* ---------------- কুরআন: শুধু রিডার ---------------- */}
       {tab === "quran" && (
-        <div className="space-y-2 pb-4">
+        <div className="pb-4">
           <QuranReader />
-
-          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-            <p className="border-b border-gray-100 bg-emerald-50 px-4 py-3 font-semibold text-emerald-800 dark:border-gray-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-              ✨ আয়াতুল কুরসি
-            </p>
-            <p className="arabic-text px-4 py-4 text-right font-semibold leading-loose">{AYATUL_KURSI}</p>
-          </section>
-
-          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between border-b border-gray-100 bg-emerald-50 px-4 py-3 dark:border-gray-800 dark:bg-emerald-900/30">
-              <span className="font-semibold text-emerald-800 dark:text-emerald-300">📖 {SURAH_FATIHA.name}</span>
-              <span className="text-[10px] text-gray-400">{SURAH_FATIHA.ref}</span>
-            </div>
-            <p className="arabic-text px-4 py-4 text-right font-semibold leading-loose">{SURAH_FATIHA.arabic}</p>
-            <p className="border-t border-gray-100 px-4 py-3 text-xs leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400">
-              {SURAH_FATIHA.meaning}
-            </p>
-          </section>
-
-          <details className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-            <summary className="cursor-pointer list-none px-4 py-3 font-semibold">📖 চার কুল শরীফ</summary>
-            <div className="space-y-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-              {QULS.map((s) => (
-                <div key={s.name}>
-                  <p className="mb-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{s.name}</p>
-                  <p className="arabic-text mb-1 text-right font-medium">{s.arabic}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{s.meaning}</p>
-                </div>
-              ))}
-            </div>
-          </details>
-
-          <h3 className="pt-2 text-sm font-semibold text-gray-500 dark:text-gray-400">
-            ১০টি গুরুত্বপূর্ণ আয়াত
-          </h3>
-          {IMPORTANT_AYAT.map((a, i) => (
-            <section key={i} className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-              <div className="flex items-center justify-between border-b border-gray-100 bg-emerald-50/60 px-4 py-2.5 dark:border-gray-800 dark:bg-emerald-900/20">
-                <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-bold text-white">{a.ref}</span>
-                <span className="text-[10px] text-gray-400">আয়াত {bnNum(i + 1)}</span>
-              </div>
-              <p className="arabic-text px-4 py-3 text-right font-semibold leading-loose">{a.arabic}</p>
-              <p className="border-t border-gray-100 px-4 py-3 text-xs leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400">
-                {a.meaning}
-              </p>
-            </section>
-          ))}
         </div>
       )}
 
