@@ -40,8 +40,15 @@ export function loadLogs(): Logs {
   try { return JSON.parse(localStorage.getItem(LOGS_KEY) || "{}"); } catch { return {}; }
 }
 
+/** Fired after any synced dataset changes in localStorage; cloud sync listens
+ *  for this event to schedule a debounced push (see src/lib/sync.ts). */
+function notifyDataChanged(source: string): void {
+  try { window.dispatchEvent(new CustomEvent("it:data-updated", { detail: source })); } catch { /* non-browser */ }
+}
+
 export function saveLogs(l: Logs): void {
   localStorage.setItem(LOGS_KEY, JSON.stringify(l));
+  notifyDataChanged(LOGS_KEY);
 }
 
 export function getDay(key: string): DayLog {
@@ -66,6 +73,7 @@ export function loadSettings(): Settings {
 
 export function saveSettings(s: Settings): void {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  notifyDataChanged(SETTINGS_KEY);
 }
 
 export function loadDeeds(): CustomDeed[] {
@@ -74,6 +82,7 @@ export function loadDeeds(): CustomDeed[] {
 
 export function saveDeeds(d: CustomDeed[]): void {
   localStorage.setItem(DEEDS_KEY, JSON.stringify(d));
+  notifyDataChanged(DEEDS_KEY);
 }
 
 export function loadCustomZikr(): ZikrPreset[] {
