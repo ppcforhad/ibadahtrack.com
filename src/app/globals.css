@@ -22,7 +22,7 @@ body {
 
 .arabic-text {
   direction: rtl;
-  font-family: "Amiri Quran", "Amiri", serif;
+  font-family: "Noto Naskh Arabic", "Amiri", serif;
   font-size: 1.7rem;
   line-height: 2.3;
 }
@@ -30,5 +30,6 @@ body {
 /* হিফজ মাদরাসা স্টাইল — কুরআন রিডারের জন্য আরও বড় ও স্পষ্ট */
 .quran-text {
   direction: rtl;
-  font-family: "Amiri Quran", "Amiri", serif;
+  font-family: "Noto Naskh Arabic", "Amiri", serif;
+  font-weight: 600;
 }

@@ -221,7 +221,7 @@ export default function QuranReader() {
                   <p className="quran-text text-right text-[1.9rem] leading-[2.4] font-semibold text-gray-900 dark:text-gray-50">
                     {a.text}
                   </p>
-                  <p className="mt-3 border-t border-gray-100 pt-2.5 text-xs leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400">
+                  <p className="mt-3 border-t border-gray-100 pt-2.5 text-sm font-medium leading-relaxed text-gray-700 dark:border-gray-800 dark:text-gray-200">
                     {a.meaning}
                   </p>
                 </div>
