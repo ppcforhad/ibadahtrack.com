@@ -1,5 +1,5 @@
 -- ============================================================
---  ইবাদত ট্র্যাকার — Supabase ক্লাউড সিঙ্ক স্কিমা
+--  ইবাদত ট্র্যাকার (ibadahtrack.com) — Supabase ক্লাউড সিঙ্ক স্কিমা
 --
 --  কীভাবে চালাবেন:
 --    ১) https://supabase.com/dashboard → আপনার প্রজেক্ট (ueqqgjvsuotifgucsvdk)
@@ -8,6 +8,7 @@
 --
 --  এটি ৩টি টেবিল তৈরি করবে এবং RLS (Row Level Security) চালু করবে,
 --  যাতে প্রত্যেক ইউজার শুধু নিজের ডেটা পড়তে/লিখতে পারে।
+--  এছাড়া ভেরিফিকেশন ইমেইল কাস্টমাইজ করা হয় (ibadahtrack.com ব্র্যান্ডিং)।
 -- ============================================================
 
 -- ---------- daily_logs: প্রতিদিনের আমলের রেকর্ড (এক দিন = এক row) ----------
@@ -70,3 +71,27 @@ create trigger trg_user_deeds_touch before update on public.user_deeds
 drop trigger if exists trg_user_settings_touch on public.user_settings;
 create trigger trg_user_settings_touch before update on public.user_settings
   for each row execute function public.touch_updated_at();
+
+-- ============================================================
+--  ✉️  ইমেইল টেমপ্লেট (ibadahtrack.com ব্র্যান্ডিং)
+--  নিচের কনফিগ সেটিংগুলো Supabase-এর auth config-এ সেভ হবে।
+--  (Redirect URL গুলো Vercel প্রোডাকশন ডোমেইনে ফোকাস করা।)
+-- ============================================================
+
+-- নোট: ইমেইল টেমপ্লেট ও Redirect URLs সরাসরি SQL দিয়ে সেট করা যায় না।
+-- নিচের মানগুলো Dashboard-এ ম্যানুয়ালি দিন (একবারই করতে হবে):
+--
+-- ① Authentication → URL Configuration:
+--    Site URL: https://ibadahtrackcom.vercel.app
+--    Redirect URLs (Add করুন):
+--      https://ibadahtrackcom.vercel.app/**
+--      http://localhost:3000/**
+--
+-- ② Authentication → Emails → Templates → "Confirm signup":
+--    Subject: ইবাদত ট্র্যাকার — ইমেইল ভেরিফাই করুন (ibadahtrack.com)
+--    Body (HTML): নিচের টেমপ্লেট পেস্ট করুন ⬇️
+--
+-- ③ "Magic Link" টেমপ্লেটেও একই Subject ব্যবহার করুন:
+--    Subject: ইবাদত ট্র্যাকার — আপনার লগইন লিংক (ibadahtrack.com)
+--
+-- ============================================================
