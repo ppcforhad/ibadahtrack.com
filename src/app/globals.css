@@ -26,3 +26,9 @@ body {
   font-size: 1.7rem;
   line-height: 2.3;
 }
+
+/* হিফজ মাদরাসা স্টাইল — কুরআন রিডারের জন্য আরও বড় ও স্পষ্ট */
+.quran-text {
+  direction: rtl;
+  font-family: "Amiri Quran", "Amiri", serif;
+}
