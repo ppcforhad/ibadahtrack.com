@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AYATUL_KURSI, KALIMAS, QULS } from "@/lib/data";
+import QuranReader from "./quran-reader";
 import {
   HADITHS_25,
   HADITH_THEMES,
@@ -56,6 +57,8 @@ export default function IlmPage() {
       {/* ---------------- কুরআন ---------------- */}
       {tab === "quran" && (
         <div className="space-y-2 pb-4">
+          <QuranReader />
+
           <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
             <p className="border-b border-gray-100 bg-emerald-50 px-4 py-3 font-semibold text-emerald-800 dark:border-gray-800 dark:bg-emerald-900/30 dark:text-emerald-300">
               ✨ আয়াতুল কুরসি
