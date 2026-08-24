@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Ibadah Tracker - ইবাদাত ট্র্যাকার",
   "short_name": "Ibadah",
   "description": "নামাজ, যিকির, দুআ ও কুরআন ট্র্যাকিং - দৈনিক ইবাদাত সঙ্গী",
@@ -9,8 +10,26 @@
   "background_color": "#f9fafb",
   "theme_color": "#059669",
   "lang": "bn",
+  "categories": ["lifestyle", "education"],
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "যিকির কাউন্টার",
+      "short_name": "যিকির",
+      "url": "/zikr",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "আজকের স্ট্যাটস",
+      "short_name": "স্ট্যাটস",
+      "url": "/stats",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
