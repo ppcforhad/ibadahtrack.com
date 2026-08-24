@@ -24,11 +24,19 @@ type View = "list" | "read";
 const BOOKMARKS_KEY = "it_quran_bookmarks_v1";
 const LAST_KEY = "it_quran_last_v1";
 
+interface AyahBookmark { s: number; a: number }
+
 function loadBookmarks(): number[] {
   try { return JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || "[]"); } catch { return []; }
 }
 function saveBookmarks(b: number[]): void {
   try { localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(b)); } catch { /* ignore */ }
+}
+function loadAyahBookmarks(): AyahBookmark[] {
+  try { return JSON.parse(localStorage.getItem("it_quran_ayah_marks_v1") || "[]"); } catch { return []; }
+}
+function saveAyahBookmarks(b: AyahBookmark[]): void {
+  try { localStorage.setItem("it_quran_ayah_marks_v1", JSON.stringify(b)); } catch { /* ignore */ }
 }
 function loadLast(): { surah: number } | null {
   try { return JSON.parse(localStorage.getItem(LAST_KEY) || "null"); } catch { return null; }
@@ -49,7 +57,15 @@ export default function QuranReader() {
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [onlyBookmarked, setOnlyBookmarked] = useState(false);
   const [last, setLast] = useState<{ surah: number } | null>(null);
+  const [ayahMarks, setAyahMarks] = useState<AyahBookmark[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load persisted data on mount
+  useEffect(() => {
+    setBookmarks(loadBookmarks());
+    setAyahMarks(loadAyahBookmarks());
+    setLast(loadLast());
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -126,6 +142,8 @@ export default function QuranReader() {
       setSelAyah={setSelAyah}
       bookmarks={bookmarks}
       setBookmarks={setBookmarks}
+      ayahMarks={ayahMarks}
+      setAyahMarks={setAyahMarks}
       onlyBookmarked={onlyBookmarked}
       setOnlyBookmarked={setOnlyBookmarked}
       last={last}
@@ -181,6 +199,8 @@ interface ReaderProps {
   setSelAyah: (n: number | null) => void;
   bookmarks: number[];
   setBookmarks: (b: number[]) => void;
+  ayahMarks: AyahBookmark[];
+  setAyahMarks: (b: AyahBookmark[]) => void;
   onlyBookmarked: boolean;
   setOnlyBookmarked: (v: boolean) => void;
   last: { surah: number } | null;
@@ -190,7 +210,7 @@ interface ReaderProps {
 }
 
 function QuranReaderInner(p: ReaderProps) {
-  const { open, setOpen, view, setView, query, setQuery, current, setCurrent, data, setData, loading, setLoading, error, setError, selAyah, setSelAyah, bookmarks, setBookmarks, onlyBookmarked, setOnlyBookmarked, last, setLast, scrollRef, directMode } = p;
+  const { open, setOpen, view, setView, query, setQuery, current, setCurrent, data, setData, loading, setLoading, error, setError, selAyah, setSelAyah, bookmarks, setBookmarks, ayahMarks, setAyahMarks, onlyBookmarked, setOnlyBookmarked, last, setLast, scrollRef, directMode } = p;
   const localScroll = useRef<HTMLDivElement>(null);
   const scrollEl = scrollRef ?? localScroll;
 
@@ -410,29 +430,50 @@ function QuranReaderInner(p: ReaderProps) {
                   </p>
                 )}
 
-                {/* Continuous Hafezi-style flow — tap an ayah to highlight */}
+                {/* Continuous Hafezi-style flow — tap an ayah to highlight; long-press/tap again to bookmark */}
                 <p className="arabic-text text-right leading-loose">
-                  {data.ayahs.map((a) => (
-                    <span
-                      key={a.n}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelAyah(selAyah === a.n ? null : a.n)}
-                      onKeyDown={(e) => e.key === "Enter" && setSelAyah(selAyah === a.n ? null : a.n)}
-                      className={
-                        "cursor-pointer rounded px-0.5 transition-colors " +
-                        (selAyah === a.n
-                          ? "bg-emerald-200/70 dark:bg-emerald-700/50"
-                          : "")
-                      }
-                    >
-                      {a.n === 1 ? firstText : a.text}{" "}
-                      <span className="text-base text-emerald-600 dark:text-emerald-400">
-                        ﴿{bnNum(a.n)}﴾
-                      </span>{" "}
-                    </span>
-                  ))}
+                  {data.ayahs.map((a) => {
+                    const marked = ayahMarks.some((m) => m.s === current && m.a === a.n);
+                    return (
+                      <span
+                        key={a.n}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          if (selAyah === a.n) {
+                            // Second tap on selected ayah → toggle bookmark
+                            const cur = ayahMarks.some((m) => m.s === current && m.a === a.n)
+                              ? ayahMarks.filter((m) => !(m.s === current && m.a === a.n))
+                              : [...ayahMarks, { s: current, a: a.n }];
+                            setAyahMarks(cur);
+                            saveAyahBookmarks(cur);
+                          } else {
+                            setSelAyah(a.n);
+                          }
+                        }}
+                        onKeyDown={(e) => e.key === "Enter" && setSelAyah(selAyah === a.n ? null : a.n)}
+                        className={
+                          "cursor-pointer rounded px-0.5 transition-colors " +
+                          (marked
+                            ? "bg-amber-200/70 dark:bg-amber-700/40"
+                            : selAyah === a.n
+                              ? "bg-emerald-200/70 dark:bg-emerald-700/50"
+                              : "")
+                        }
+                      >
+                        {a.n === 1 ? firstText : a.text}{" "}
+                        <span className={"text-base " + (marked ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
+                          ﴿{bnNum(a.n)}{marked ? "🔖" : ""}﴾
+                        </span>{" "}
+                      </span>
+                    );
+                  })}
                 </p>
+                {ayahMarks.some((m) => m.s === current) && (
+                  <p className="pt-2 text-center text-[11px] text-amber-600 dark:text-amber-400">
+                    🔖 বুকমার্ক করা আয়াত: {ayahMarks.filter((m) => m.s === current).map((m) => bnNum(m.a)).join(", ")} — আবার ট্যাপ করলে বুকমার্ক বাদ যাবে
+                  </p>
+                )}
 
                 <p className="pt-6 text-center text-[11px] text-gray-400">
                   ☾ শেষ — সূরা {surahName(current)} সম্পন্ন ☽
