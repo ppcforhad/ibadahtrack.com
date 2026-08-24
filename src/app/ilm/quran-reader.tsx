@@ -51,22 +51,6 @@ export default function QuranReader() {
   const [last, setLast] = useState<{ surah: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  /** Bangla-digit-tolerant search: name contains OR number matches. */
-  const filtered = useMemo(() => {
-    const en = query.replace(/[০-৯]/g, (d) =>
-      String("০১২৩৪৫৬৭৮৯".indexOf(d))
-    ).trim();
-    let list = SURAHS.map((s, i) => ({ ...s, num: i + 1 }));
-    if (onlyBookmarked) list = list.filter((s) => bookmarks.includes(s.num));
-    if (!en) return list;
-    return list.filter(
-      ({ bn, num }) =>
-        bn.includes(query.trim()) ||
-        String(num).includes(en) ||
-        bnNum(num).includes(query.trim())
-    );
-  }, [query, onlyBookmarked, bookmarks]);
-
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -122,43 +106,178 @@ export default function QuranReader() {
   }
 
   if (!open) {
-    return (
-      <button
-        onClick={() => {
-          setOpen(true);
-          setView("list");
-          setQuery("");
-          setBookmarks(loadBookmarks());
-          setLast(loadLast());
-        }}
-        className="w-full rounded-2xl bg-gradient-to-l from-emerald-600 to-emerald-500 p-4 text-left shadow-md transition active:scale-[0.99]"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold text-white">📖 সম্পূর্ণ কুরআন পড়ুন</p>
-            <p className="mt-0.5 text-xs text-emerald-50/90">
-              {bnNum(114)} সূরা • উসমানী লিপি • অফলাইনেও চলে
-            </p>
-          </div>
-          <span className="rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white">
-            খুলুন ›
-          </span>
+    // Direct mode: the reader IS the কুরআন tab content — list visible immediately.
+    return <QuranReaderInner
+      open
+      setOpen={setOpen}
+      view={view}
+      setView={setView}
+      query={query}
+      setQuery={setQuery}
+      current={current}
+      setCurrent={setCurrent}
+      data={data}
+      setData={setData}
+      loading={loading}
+      setLoading={setLoading}
+      error={error}
+      setError={setError}
+      selAyah={selAyah}
+      setSelAyah={setSelAyah}
+      bookmarks={bookmarks}
+      setBookmarks={setBookmarks}
+      onlyBookmarked={onlyBookmarked}
+      setOnlyBookmarked={setOnlyBookmarked}
+      last={last}
+      setLast={setLast}
+      scrollRef={scrollRef}
+      directMode
+    />;
+  }
+
+  // Entry-card mode (kept for compatibility if used elsewhere).
+  return (
+    <button
+      onClick={() => {
+        setOpen(true);
+        setView("list");
+        setQuery("");
+        setBookmarks(loadBookmarks());
+        setLast(loadLast());
+      }}
+      className="w-full rounded-2xl bg-gradient-to-l from-emerald-600 to-emerald-500 p-4 text-left shadow-md transition active:scale-[0.99]"
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-bold text-white">📖 সম্পূর্ণ কুরআন পড়ুন</p>
+          <p className="mt-0.5 text-xs text-emerald-50/90">
+            {bnNum(114)} সূরা • উসমানী লিপি • অফলাইনেও চলে
+          </p>
         </div>
-      </button>
+        <span className="rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white">
+          খুলুন ›
+        </span>
+      </div>
+    </button>
+  );
+}
+
+interface ReaderProps {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  view: View;
+  setView: (v: View) => void;
+  query: string;
+  setQuery: (v: string) => void;
+  current: number;
+  setCurrent: (n: number) => void;
+  data: SurahText | null;
+  setData: (d: SurahText | null) => void;
+  loading: boolean;
+  setLoading: (v: boolean) => void;
+  error: string;
+  setError: (v: string) => void;
+  selAyah: number | null;
+  setSelAyah: (n: number | null) => void;
+  bookmarks: number[];
+  setBookmarks: (b: number[]) => void;
+  onlyBookmarked: boolean;
+  setOnlyBookmarked: (v: boolean) => void;
+  last: { surah: number } | null;
+  setLast: (l: { surah: number } | null) => void;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  directMode?: boolean;
+}
+
+function QuranReaderInner(p: ReaderProps) {
+  const { open, setOpen, view, setView, query, setQuery, current, setCurrent, data, setData, loading, setLoading, error, setError, selAyah, setSelAyah, bookmarks, setBookmarks, onlyBookmarked, setOnlyBookmarked, last, setLast, scrollRef, directMode } = p;
+  const localScroll = useRef<HTMLDivElement>(null);
+  const scrollEl = scrollRef ?? localScroll;
+
+  /** Bangla-digit-tolerant search: name contains OR number matches. */
+  const filtered = useMemo(() => {
+    const en = query.replace(/[০-৯]/g, (d) =>
+      String("০১২৩৪৫৬৭৮৯".indexOf(d))
+    ).trim();
+    let list = SURAHS.map((s, i) => ({ ...s, num: i + 1 }));
+    if (onlyBookmarked) list = list.filter((s) => bookmarks.includes(s.num));
+    if (!en) return list;
+    return list.filter(
+      ({ bn, num }) =>
+        bn.includes(query.trim()) ||
+        String(num).includes(en) ||
+        bnNum(num).includes(query.trim())
     );
+  }, [query, onlyBookmarked, bookmarks]);
+
+  // Load bookmarks + last-read on first mount (direct mode shows list immediately).
+  useEffect(() => {
+    if (open && bookmarks.length === 0) setBookmarks(loadBookmarks());
+    if (open && !last) setLast(loadLast());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const load = useCallback(async (n: number) => {
+    setLoading(true);
+    setError("");
+    setSelAyah(null);
+    try {
+      const s = await fetchSurah(n);
+      setData(s);
+      setCurrent(n);
+      setView("read");
+      saveLast(n);
+      setLast({ surah: n });
+      requestAnimationFrame(() =>
+        scrollRef.current?.scrollTo({ top: 0 })
+      );
+    } catch {
+      setError("ইন্টারনেট সংযোগ পাওয়া যায়নি এবং অফলাইন কপিও নেই।");
+    } finally {
+      setLoading(false);
+    }
+  }, [setCurrent, setData, setView, setError, setLoading, setSelAyah, setLast, scrollRef]);
+
+  const toggleBookmark = (n: number) => {
+    const cur = bookmarks.includes(n)
+      ? bookmarks.filter((x) => x !== n)
+      : [...bookmarks, n];
+    setBookmarks(cur);
+    saveBookmarks(cur);
+  };
+
+  const go = (n: number) => {
+    if (n >= 1 && n <= 114 && n !== current) void load(n);
+  };
+
+  // Split the prepended bismillah out of ayah 1 (Hafezi mushaf style).
+  let firstText = data?.ayahs[0]?.text ?? "";
+  let showBismillah = false;
+  if (data) {
+    if (current === 1 || current === 9) {
+      showBismillah = false;
+    } else {
+      showBismillah = true;
+      firstText = firstText.replace(BISMILLAH_PREFIX, "").trim();
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className={"fixed inset-0 z-50 flex flex-col bg-gray-50 dark:bg-gray-950" + (directMode ? "" : "")}>
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
         <div className="flex items-center gap-2">
+          {/* Back button: reading view → list; list → exit (direct mode) or close */}
           <button
-            onClick={() => setOpen(false)}
-            aria-label="বন্ধ করুন"
+            onClick={() => {
+              if (view === "read") setView("list");
+              else if (!directMode) setOpen(false);
+              else setOpen(false);
+            }}
+            aria-label={view === "read" ? "পিছনে" : "বন্ধ করুন"}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gray-100 text-lg text-gray-600 transition active:scale-95 dark:bg-gray-800 dark:text-gray-300"
           >
-            ✕
+            {view === "read" ? "←" : "✕"}
           </button>
           <div className="min-w-0 flex-1">
             <p className="truncate font-bold text-emerald-700 dark:text-emerald-400">
@@ -225,7 +344,7 @@ export default function QuranReader() {
               )}
             </div>
           </div>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-3 py-2 pb-24">
+          <div ref={scrollEl as React.RefObject<HTMLDivElement>} className="flex-1 overflow-y-auto overscroll-contain px-3 py-2 pb-24">
             {filtered.length === 0 && (
               <p className="pt-8 text-center text-sm text-gray-400">কোনো সূরা মেলেনি 🔍</p>
             )}
@@ -257,7 +376,7 @@ export default function QuranReader() {
       ) : (
         /* ---------- Reading view ---------- */
         <>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-28">
+          <div ref={scrollEl as React.RefObject<HTMLDivElement>} className="flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-28">
             {loading && (
               <div className="flex flex-col items-center gap-3 pt-20">
                 <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-emerald-200 border-t-emerald-600" />
