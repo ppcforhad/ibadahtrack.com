@@ -24,14 +24,29 @@ const FIXED: Item[] = [
   { key: "tahajjud", bn: "তাহাজ্জুদ", en: "ঐচ্ছিক" },
 ];
 
+/** Suggested amal library — one tap adds to today's list. */
+const SUGGESTED: Item[] = [
+  { key: "s_quran_tilawat", bn: "কুরআন তিলাওয়াত", pts: 10 },
+  { key: "s_dan_sadaka", bn: "দান সদকা", pts: 10 },
+  { key: "s_mosjid_jamat", bn: "মসজিদে জামাত", pts: 10 },
+  { key: "s_roza", bn: "রোজা (নফল)", pts: 20 },
+  { key: "s_parents", bn: "মা-বাবার সেবা", pts: 15 },
+  { key: "s_istighfar100", bn: "ইস্তিগফার ১০০ বার", pts: 10 },
+  { key: "s_durood100", bn: "দুরুদ ১০০ বার", pts: 10 },
+  { key: "s_good_words", bn: "ভালো কথা বলা", pts: 5 },
+  { key: "s_smile_salam", bn: "হাসিমুখে সালাম", pts: 5 },
+  { key: "s_help_others", bn: "অন্যকে সাহায্য", pts: 10 },
+];
+
 /** "আমার আমল" — unified daily deed checklist: fard salahs first, then every
- *  other amol (custom deeds included). Ticking moves an item into the collapsed
- *  সম্পন্ন section below; points accrue via scoring.ts as before. */
+ *  other amol (suggested + custom). Ticking moves an item into the collapsed
+ *  সম্পন্ন section; the ➕ আমল যোগ করুন panel is collapsible (default minimized). */
 export default function MyAmolList({ onChanged }: { onChanged?: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [log, setLog] = useState<DayLog>({});
   const [deeds, setDeeds] = useState<CustomDeed[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const [name, setName] = useState("");
   const [pts, setPts] = useState(5);
@@ -83,7 +98,13 @@ export default function MyAmolList({ onChanged }: { onChanged?: () => void }) {
     act(() => saveDeeds([...deeds, item]));
     setName("");
     setPts(5);
-    setShowAdd(false);
+    setShowCustom(false);
+  };
+
+  /** One tap on a suggested amal → add it permanently to my list. */
+  const addSuggested = (item: Item) => {
+    if (deeds.some((d) => d.id === item.key)) return;
+    act(() => saveDeeds([...deeds, { id: item.key, bn: item.bn, pts: item.pts ?? 5 }]));
   };
 
   const fixedPending = FIXED.filter((f) => !isChecked(f.key));
@@ -165,46 +186,88 @@ export default function MyAmolList({ onChanged }: { onChanged?: () => void }) {
         </div>
       )}
 
-      <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-800">
-        {!showAdd ? (
-          <button
-            onClick={() => setShowAdd(true)}
-            className="min-h-[44px] w-full rounded-xl border border-dashed border-emerald-300 py-2 text-sm font-medium text-emerald-700 active:scale-[0.99] dark:border-emerald-700 dark:text-emerald-400"
-          >
-            + নতুন আমল যোগ করুন
-          </button>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              addDeed();
-            }}
-            className="space-y-2"
-          >
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="নতুন আমলের নাম…"
-              className="min-h-[44px] w-full rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
-            />
-            <div className="flex items-center gap-2">
-              <div className="flex min-h-[44px] flex-1 items-center rounded-xl border border-gray-200 px-1 dark:border-gray-700">
-                <button type="button" onClick={() => setPts((p) => Math.max(1, p - 1))} aria-label="পয়েন্ট কমান" className="h-9 w-9 text-lg leading-none text-gray-500 dark:text-gray-400">
-                  −
-                </button>
-                <span className="flex-1 text-center text-sm font-semibold tabular-nums">{bnNum(pts)} পয়েন্ট</span>
-                <button type="button" onClick={() => setPts((p) => Math.min(100, p + 1))} aria-label="পয়েন্ট বাড়ান" className="h-9 w-9 text-lg leading-none text-gray-500 dark:text-gray-400">
-                  +
-                </button>
+      {/* ➕ আমল যোগ করুন — collapsible panel (default minimized) */}
+      <div className="mt-3 border-t border-gray-100 pt-2 dark:border-gray-800">
+        <button
+          onClick={() => setShowAdd(!showAdd)}
+          aria-expanded={showAdd}
+          className="flex min-h-[44px] w-full items-center justify-between rounded-xl px-1"
+        >
+          <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+            ➕ আমল যোগ করুন
+          </span>
+          <span className="text-xs text-gray-400">{showAdd ? "▲" : "▼"}</span>
+        </button>
+
+        {showAdd && (
+          <div className="space-y-3 pb-1 pt-1">
+            {/* Suggested amal chips — one tap to add */}
+            <div>
+              <p className="mb-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400">📋 সাধারণ আমল — ট্যাপ করলেই যোগ হবে</p>
+              <div className="flex flex-wrap gap-1.5">
+                {SUGGESTED.map((s) => {
+                  const added = deeds.some((d) => d.id === s.key);
+                  return (
+                    <button
+                      key={s.key}
+                      onClick={() => addSuggested(s)}
+                      disabled={added}
+                      title={added ? "already added" : undefined}
+                      className={
+                        "min-h-[36px] rounded-full border px-3 py-1.5 text-xs transition active:scale-95 " +
+                        (added
+                          ? "cursor-default border-emerald-200 bg-emerald-50 text-emerald-500 line-through opacity-70 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-600"
+                          : "border-gray-200 bg-white font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200")
+                      }
+                    >
+                      {added ? "✓ " : "+ "}
+                      {s.bn} <span className="opacity-60">+{bnNum(s.pts ?? 5)}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <button type="submit" className="min-h-[44px] rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white active:scale-95">
-                যোগ
-              </button>
-              <button type="button" onClick={() => setShowAdd(false)} className="min-h-[44px] px-2 text-sm text-gray-400">
-                বাতিল
-              </button>
             </div>
-          </form>
+
+            {/* Custom amal form */}
+            <div>
+              <button
+                onClick={() => setShowCustom(!showCustom)}
+                className="min-h-[40px] text-xs font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+              >
+                ✏️ নিজের আমল {showCustom ? "লুকান" : "বানান"}
+              </button>
+              {showCustom && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    addDeed();
+                  }}
+                  className="mt-1 space-y-2"
+                >
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="নতুন আমলের নাম…"
+                    className="min-h-[44px] w-full rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none focus:border-emerald-500 dark:border-gray-700 dark:bg-gray-900"
+                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex min-h-[44px] flex-1 items-center rounded-xl border border-gray-200 px-1 dark:border-gray-700">
+                      <button type="button" onClick={() => setPts((p) => Math.max(1, p - 1))} aria-label="পয়েন্ট কমান" className="h-9 w-9 text-lg leading-none text-gray-500 dark:text-gray-400">
+                        −
+                      </button>
+                      <span className="flex-1 text-center text-sm font-semibold tabular-nums">{bnNum(pts)} পয়েন্ট</span>
+                      <button type="button" onClick={() => setPts((p) => Math.min(100, p + 1))} aria-label="পয়েন্ট বাড়ান" className="h-9 w-9 text-lg leading-none text-gray-500 dark:text-gray-400">
+                        +
+                      </button>
+                    </div>
+                    <button type="submit" className="min-h-[44px] rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white active:scale-95">
+                      যোগ
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
         )}
         <p className="mt-2 text-center text-[11px] text-gray-400">৫ নামাজ সম্পূর্ণ করলে +২০ বোনাস · ফজরে +৫ বোনাস</p>
       </div>
