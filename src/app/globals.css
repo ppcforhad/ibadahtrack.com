@@ -22,6 +22,7 @@ body {
 
 .arabic-text {
   direction: rtl;
-  font-size: 1.55rem;
-  line-height: 2.2;
+  font-family: "Amiri Quran", "Amiri", serif;
+  font-size: 1.7rem;
+  line-height: 2.3;
 }
