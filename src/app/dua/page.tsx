@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DayLog, dateKey, getDay, updateDay } from "@/lib/storage";
 import { DUAS } from "@/lib/data";
 import { QURAN_DUAS } from "@/lib/quran-duas";
+import { QURAN_ESSENTIALS } from "@/lib/quran-essentials";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
 
@@ -156,7 +157,57 @@ export default function DuaPage() {
       {/* ---------------- কুরআনের দুআ ---------------- */}
       {tab === "quran" && (
         <div className="space-y-2 pb-4">
-          <p className="mb-1 text-center text-[11px] text-gray-400">
+          {/* গ্রুপ ১: ফজিলতপূর্ণ সূরা ও আয়াত */}
+          <h3 className="pt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+            ✨ ফজিলতপূর্ণ সূরা ও আয়াত — কেন ও কতবার পড়বেন
+          </h3>
+          {QURAN_ESSENTIALS.map((e) => {
+            const open = openId === e.id;
+            const isRead = read.has(e.id);
+            return (
+              <article key={e.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                <button
+                  onClick={() => setOpenId(open ? null : e.id)}
+                  className="flex min-h-[56px] w-full items-center justify-between gap-2 px-4 py-3 text-left"
+                >
+                  <span className="min-w-0">
+                    <span className="font-semibold">{e.title}</span>{" "}
+                    <span className="text-[10px] text-gray-400">{e.ref}</span>
+                  </span>
+                  <span className="shrink-0 text-lg">{isRead ? "✅" : open ? "▲" : "▼"}</span>
+                </button>
+                {open && (
+                  <div className="border-t border-gray-100 px-4 py-3 dark:border-gray-800">
+                    <div className="mb-3 rounded-xl bg-emerald-50 p-3 dark:bg-emerald-900/30">
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">✨ ফজিলত</p>
+                      <p className="text-xs leading-relaxed text-emerald-800 dark:text-emerald-200">{e.fazilat}</p>
+                    </div>
+                    <p className="arabic-text mb-3 text-right font-semibold text-emerald-800 dark:text-emerald-300">{e.arabic}</p>
+                    <p className="mb-3 text-sm leading-relaxed">{e.meaning}</p>
+                    <div className="mb-3 rounded-xl border border-emerald-200 p-3 dark:border-emerald-800">
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">📌 কীভাবে / কতবার</p>
+                      <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-300">{e.howto}</p>
+                    </div>
+                    <button
+                      onClick={() => toggleRead(e.id)}
+                      className={
+                        "min-h-[40px] rounded-full px-4 text-sm font-medium active:scale-95 " +
+                        (isRead ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-emerald-600 text-white")
+                      }
+                    >
+                      {isRead ? "✅ পড়া হয়েছে" : "পড়া হয়েছে ✓ (+১ পয়েন্ট)"}
+                    </button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+
+          {/* গ্রুপ ২: রব্বানা দুআসমূহ */}
+          <h3 className="pt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+            🤲 রব্বানা দুআসমূহ — কুরআন থেকে
+          </h3>
+          <p className="text-center text-[11px] text-gray-400">
             সরাসরি কুরআন থেকে নেওয়া দুআসমূহ — রাসূল ﷺ এগুলো পড়তেন ও শেখাতেন
           </p>
           {filteredQuran.map((d) => {

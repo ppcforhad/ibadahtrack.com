@@ -21,6 +21,22 @@ const BISMILLAH_PREFIX = new RegExp(
 
 type View = "list" | "read";
 
+const BOOKMARKS_KEY = "it_quran_bookmarks_v1";
+const LAST_KEY = "it_quran_last_v1";
+
+function loadBookmarks(): number[] {
+  try { return JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || "[]"); } catch { return []; }
+}
+function saveBookmarks(b: number[]): void {
+  try { localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(b)); } catch { /* ignore */ }
+}
+function loadLast(): { surah: number } | null {
+  try { return JSON.parse(localStorage.getItem(LAST_KEY) || "null"); } catch { return null; }
+}
+function saveLast(surah: number): void {
+  try { localStorage.setItem(LAST_KEY, JSON.stringify({ surah, ts: Date.now() })); } catch { /* ignore */ }
+}
+
 export default function QuranReader() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("list");
@@ -30,6 +46,9 @@ export default function QuranReader() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selAyah, setSelAyah] = useState<number | null>(null);
+  const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [onlyBookmarked, setOnlyBookmarked] = useState(false);
+  const [last, setLast] = useState<{ surah: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   /** Bangla-digit-tolerant search: name contains OR number matches. */
@@ -37,14 +56,16 @@ export default function QuranReader() {
     const en = query.replace(/[০-৯]/g, (d) =>
       String("০১২৩৪৫৬৭৮৯".indexOf(d))
     ).trim();
-    if (!en) return SURAHS.map((s, i) => ({ ...s, num: i + 1 }));
-    return SURAHS.map((s, i) => ({ ...s, num: i + 1 })).filter(
+    let list = SURAHS.map((s, i) => ({ ...s, num: i + 1 }));
+    if (onlyBookmarked) list = list.filter((s) => bookmarks.includes(s.num));
+    if (!en) return list;
+    return list.filter(
       ({ bn, num }) =>
         bn.includes(query.trim()) ||
         String(num).includes(en) ||
         bnNum(num).includes(query.trim())
     );
-  }, [query]);
+  }, [query, onlyBookmarked, bookmarks]);
 
   useEffect(() => {
     if (!open) return;
@@ -64,6 +85,8 @@ export default function QuranReader() {
       setData(s);
       setCurrent(n);
       setView("read");
+      saveLast(n);
+      setLast({ surah: n });
       requestAnimationFrame(() =>
         scrollRef.current?.scrollTo({ top: 0 })
       );
@@ -73,6 +96,14 @@ export default function QuranReader() {
       setLoading(false);
     }
   }, []);
+
+  const toggleBookmark = (n: number) => {
+    const cur = bookmarks.includes(n)
+      ? bookmarks.filter((x) => x !== n)
+      : [...bookmarks, n];
+    setBookmarks(cur);
+    saveBookmarks(cur);
+  };
 
   const go = (n: number) => {
     if (n >= 1 && n <= 114 && n !== current) void load(n);
@@ -97,6 +128,8 @@ export default function QuranReader() {
           setOpen(true);
           setView("list");
           setQuery("");
+          setBookmarks(loadBookmarks());
+          setLast(loadLast());
         }}
         className="w-full rounded-2xl bg-gradient-to-l from-emerald-600 to-emerald-500 p-4 text-left shadow-md transition active:scale-[0.99]"
       >
@@ -136,12 +169,26 @@ export default function QuranReader() {
             </p>
           </div>
           {view === "read" && (
-            <button
-              onClick={() => setView("list")}
-              className="min-h-[36px] shrink-0 rounded-full bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition active:scale-95 dark:bg-emerald-900/40 dark:text-emerald-300"
-            >
-              📚 তালিকা
-            </button>
+            <>
+              <button
+                onClick={() => toggleBookmark(current)}
+                aria-label="বুকমার্ক"
+                className={
+                  "grid h-10 w-10 shrink-0 place-items-center rounded-full text-lg transition active:scale-95 " +
+                  (bookmarks.includes(current)
+                    ? "bg-emerald-600 text-white"
+                    : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-300")
+                }
+              >
+                {bookmarks.includes(current) ? "🔖" : "🔖"}
+              </button>
+              <button
+                onClick={() => setView("list")}
+                className="min-h-[36px] shrink-0 rounded-full bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition active:scale-95 dark:bg-emerald-900/40 dark:text-emerald-300"
+              >
+                📚 তালিকা
+              </button>
+            </>
           )}
         </div>
       </header>
@@ -156,6 +203,27 @@ export default function QuranReader() {
               placeholder="সূরা খুঁজুন… (নাম বা নম্বর)"
               className="min-h-[42px] w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:ring-emerald-900"
             />
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => setOnlyBookmarked(!onlyBookmarked)}
+                className={
+                  "min-h-[34px] rounded-full px-3 text-xs font-semibold transition " +
+                  (onlyBookmarked
+                    ? "bg-emerald-600 text-white"
+                    : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300")
+                }
+              >
+                🔖 বুকমার্ক ({bnNum(bookmarks.length)})
+              </button>
+              {last && (
+                <button
+                  onClick={() => void load(last.surah)}
+                  className="min-h-[34px] rounded-full bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition active:scale-95 dark:bg-emerald-900/40 dark:text-emerald-300"
+                >
+                  📖 শেষ পড়া: {surahName(last.surah)} — চালিয়ে যান
+                </button>
+              )}
+            </div>
           </div>
           <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-3 py-2 pb-24">
             {filtered.length === 0 && (
@@ -177,6 +245,7 @@ export default function QuranReader() {
                     {bnNum(num)}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    {bookmarks.includes(num) && <span className="mr-1">🔖</span>}
                     {bn}
                   </span>
                   <span className="shrink-0 text-[11px] text-gray-400">{bnNum(ayahs)} আয়াত</span>
