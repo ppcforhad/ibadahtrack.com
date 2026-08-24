@@ -29,9 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="font-sans">
+      <body className="font-sans flex min-h-screen flex-col">
         <ServiceWorkerRegister />
-        <main className="mx-auto w-full max-w-lg px-4 pb-28 pt-4">{children}</main>
+        <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-6 pt-4">{children}</main>
         <BottomNav />
       </body>
     </html>

@@ -31,10 +31,19 @@ export function timesFor(lat: number, lng: number, date: Date, method: MethodId)
 }
 
 export const PRAYER_BN: Record<string, string> = {
-  fajr: "ফজর", dhuhr: "যোহর", asr: "আসর", maghrib: "মগরিব", isha: "ইশা",
+  fajr: "ফজর", sunrise: "সূর্যোদয়", dhuhr: "যোহর", asr: "আসর", maghrib: "মগরিব", isha: "ইশা",
 };
 
 const ORDER = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
+const SCHEDULE_ORDER = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"] as const;
+
+export type ScheduleEntry = { name: string; time: Date };
+
+/** All of today's prayer times (+ sunrise) in display order. */
+export function todayTimes(lat: number, lng: number, method: MethodId, now: Date = new Date()): ScheduleEntry[] {
+  const t = timesFor(lat, lng, now, method);
+  return SCHEDULE_ORDER.map((k) => ({ name: k, time: t[k] }));
+}
 
 export function nextPrayer(lat: number, lng: number, method: MethodId, now: Date = new Date()): { name: string; time: Date } {
   const t = timesFor(lat, lng, now, method);

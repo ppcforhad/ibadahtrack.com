@@ -14,7 +14,7 @@ const TABS = [
 export default function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+    <nav className="sticky bottom-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
       <div className="safe-bottom mx-auto flex max-w-lg">
         {TABS.map((t) => {
           const active = pathname === t.href;
@@ -23,7 +23,7 @@ export default function BottomNav() {
               key={t.href}
               href={t.href}
               className={
-                "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium transition " +
+                "flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium transition " +
                 (active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400")
               }
             >

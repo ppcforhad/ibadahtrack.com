@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { DayLog, Settings, dateKey, getDay, loadDeeds, loadLogs, loadQuranPrefs, loadSettings, saveQuranPrefs, updateDay } from "@/lib/storage";
-import { PRAYER_BN, nextPrayer } from "@/lib/prayers";
+import { PRAYER_BN, nextPrayer, todayTimes } from "@/lib/prayers";
 import { currentStreak, dayPoints, monthStats } from "@/lib/scoring";
 import CustomDeeds from "@/components/CustomDeeds";
+import MyAmolList from "@/components/MyAmolList";
 import MonthReport from "@/components/MonthReport";
 import QuranGoalCard from "@/components/QuranGoalCard";
 
@@ -54,16 +55,32 @@ export default function HomePage() {
     if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return;
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    const np = nextPrayer(settings.lat, settings.lng, settings.method);
-    const ms = np.time.getTime() - Date.now();
-    if (ms > 0 && ms < 2147483647) {
-      timers.current.push(setTimeout(() => {
-        new Notification("🕌 " + PRAYER_BN[np.name] + " এর সময় হয়েছে", {
-          body: np.time.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }),
-        });
-      }, ms));
-    }
+    let cancelled = false;
+    // Chain: after each notification fires, immediately arm the following prayer,
+    // so a user who leaves the app open gets every reminder, not just one.
+    const scheduleNext = () => {
+      if (cancelled) return;
+      const np = nextPrayer(settings.lat, settings.lng, settings.method);
+      const ms = np.time.getTime() - Date.now();
+      if (ms <= 0) return;
+      const delay = Math.min(ms, 2147483647);
+      timers.current.push(
+        setTimeout(() => {
+          if (cancelled) return;
+          try {
+            new Notification("🕌 " + PRAYER_BN[np.name] + " এর সময় হয়েছে", {
+              body: np.time.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }),
+            });
+          } catch {
+            /* notification may fail on some browsers; still chain the next prayer */
+          }
+          scheduleNext();
+        }, delay)
+      );
+    };
+    scheduleNext();
     return () => {
+      cancelled = true;
       timers.current.forEach(clearTimeout);
       timers.current = [];
     };
@@ -125,47 +142,49 @@ export default function HomePage() {
         </p>
       </section>
 
+      {new Date().getDay() === 5 && (
+        <section className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/30">
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">🕌 আজ শুক্রবার — জুমআর তৈরি করুন</p>
+          <p className="mt-1 text-xs leading-relaxed text-emerald-800 dark:text-emerald-200">
+            গুসল করুন, মসজিদে আগে পৌঁছান (বুখারী ৮৭৭ / মুসলিম ৮৪৬)। “যে ব্যক্তি শুক্রবারে সূরা কাহফ পড়বে,
+            দুই শুক্রবারের মধ্যে তার জন্য নূর হবে।” — সিলসিলা সহীহা ৫৮৬
+          </p>
+        </section>
+      )}
+
+      <section aria-label="আজকের নামাজের সময়" className="mb-4">
+        <h3 className="mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">আজকের নামাজের সময়</h3>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {todayTimes(settings.lat, settings.lng, settings.method, now).map((e) => {
+            const passed = e.time.getTime() < now.getTime();
+            const isNext = e.name === np.name && !passed;
+            return (
+              <div
+                key={e.name}
+                className={
+                  "min-w-[4.5rem] flex-1 rounded-xl border px-2 py-2 text-center transition " +
+                  (isNext
+                    ? "border-emerald-600 bg-emerald-600 text-white"
+                    : passed
+                      ? "border-gray-100 bg-white opacity-50 dark:border-gray-800 dark:bg-gray-900"
+                      : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900")
+                }
+              >
+                <p className={"text-[11px] font-medium " + (isNext ? "text-emerald-50" : "text-gray-500 dark:text-gray-400")}>
+                  {PRAYER_BN[e.name]}
+                </p>
+                <p className="mt-0.5 text-xs font-semibold tabular-nums">
+                  {e.time.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       <section className="mb-4 space-y-2">
         <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">আজকের নামাজ</h3>
-        {FARD.map((k, i) => (
-          <button
-            key={k}
-            onClick={() => toggleSalah(k)}
-            className={
-              "flex min-h-[52px] w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition active:scale-[0.99] " +
-              (log[k]
-                ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30"
-                : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900")
-            }
-          >
-            <span>
-              <span className="font-semibold">{PRAYER_BN[k]}</span>{" "}
-              <span className="text-xs text-gray-400">{EN[k]}</span>
-              {k === "fajr" && <span className="ml-1 text-xs font-medium text-emerald-600">+৫ বোনাস</span>}
-            </span>
-            <span
-              className={
-                "grid h-7 w-7 place-items-center rounded-full border text-sm " +
-                (log[k]
-                  ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-gray-300 text-transparent dark:border-gray-600")
-              }
-            >
-              ✓
-            </span>
-          </button>
-        ))}
-        <button
-          onClick={toggleTahajjud}
-          className={
-            "min-h-[48px] w-full rounded-2xl border px-4 py-3 text-left text-sm " +
-            (log.tahajjud
-              ? "border-emerald-500 bg-emerald-50 font-medium dark:bg-emerald-900/30"
-              : "border-dashed border-gray-300 dark:border-gray-700")
-          }
-        >
-          🌙 তাহাজ্জুদ (ঐচ্ছিক)
-        </button>
+        <MyAmolList onChanged={refresh} />
       </section>
 
       <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
@@ -208,7 +227,7 @@ export default function HomePage() {
         />
       </section>
 
-      <CustomDeeds onChanged={refresh} />
+      {false && <CustomDeeds onChanged={refresh} />}
 
       <section className="grid grid-cols-2 gap-3 pb-2">
         <div className="rounded-2xl border border-gray-200 bg-white p-4 text-center dark:border-gray-800 dark:bg-gray-900">
