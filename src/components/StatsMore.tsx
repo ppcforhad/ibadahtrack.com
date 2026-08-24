@@ -1,27 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { QURAN_TOTAL_PAGES, JUZ_COUNT, juzProgress, percentKhatam } from "@/lib/quran";
+import { ZIKR_PRESETS } from "@/lib/data";
 import {
   BACKUP_KEYS,
   CustomDeed,
   Logs,
   exportData,
   importData,
+  loadCustomZikr,
   loadDeeds,
   loadLogs,
   saveDeeds,
   loadQuranPrefs,
 } from "@/lib/storage";
-import { QURAN_TOTAL_PAGES, percentKhatam } from "@/lib/quran";
 import { computeBadges, topDays } from "@/lib/badges";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
 
-type PanelId = "top" | "badges" | "backup" | "deeds";
+type PanelId = "top" | "badges" | "backup" | "deeds" | "zikr";
 
 const OPTIONS: { id: PanelId; emoji: string; title: string; sub: string }[] = [
   { id: "top", emoji: "🏆", title: "সেরা দিন", sub: "আমার সেরা ১০ দিন" },
   { id: "badges", emoji: "🏅", title: "অ্যাচিভমেন্ট", sub: "অর্জনের ব্যাজ" },
+  { id: "zikr", emoji: "📿", title: "যিকির মোট", sub: "সারাজীবনের গণনা" },
   { id: "backup", emoji: "📤", title: "ব্যাকআপ ও রিস্টোর", sub: "JSON এক্সপোর্ট / ইমপোর্ট" },
   { id: "deeds", emoji: "✅", title: "আমল ম্যানেজ", sub: "নিজের আমল দেখুন / মুছুন" },
 ];
@@ -65,6 +68,27 @@ export default function StatsMore() {
   const monthPages = Object.keys(logs)
     .filter((k) => k.startsWith(monthPrefix))
     .reduce((a, k) => a + (logs[k].quranPages ?? 0), 0);
+
+  // Juz milestones (approximate — pages are summed across days, not ordered).
+  const juz = juzProgress(totalPages);
+
+  // Lifetime zikr totals per id, preset names first then user customs.
+  const zikrNameById = new Map<string, string>();
+  for (const p of ZIKR_PRESETS) zikrNameById.set(p.id, p.bn);
+  for (const p of loadCustomZikr())
+    if (!zikrNameById.has(p.id)) zikrNameById.set(p.id, p.bn);
+  const zikrTotalsMap = new Map<string, number>();
+  for (const d of Object.values(logs))
+    for (const [id, n] of Object.entries(d.zikrCounts ?? {}))
+      zikrTotalsMap.set(id, (zikrTotalsMap.get(id) ?? 0) + (n || 0));
+  const zikrTotals = [...zikrTotalsMap.entries()]
+    .map(([id, n]) => ({
+      id,
+      bn: zikrNameById.get(id) ?? id.replace(/^c_/, ""),
+      n,
+    }))
+    .sort((a, b) => b.n - a.n);
+  const zikrGrand = zikrTotals.reduce((a, t) => a + t.n, 0);
 
   const doExport = () => {
     try {
@@ -160,6 +184,23 @@ export default function StatsMore() {
         <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
           মোট {bnNum(totalPages)} পৃষ্ঠা · এই মাস {bnNum(monthPages)} পৃষ্ঠা ({bnNum(QURAN_TOTAL_PAGES)} পৃষ্ঠায় ১ খতম)
         </p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
+            জুজ {bnNum(juz.done)}/{bnNum(JUZ_COUNT)}{" "}
+            <span className="text-[10px] font-normal text-gray-500 dark:text-gray-400">
+              সম্পন্ন (আনুমানিক)
+            </span>
+          </span>
+          {juz.done >= JUZ_COUNT ? (
+            <span className="shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+              খতম সম্পন্ন 🎉
+            </span>
+          ) : (
+            <span className="shrink-0 rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-700 dark:border-emerald-800 dark:bg-gray-900 dark:text-emerald-300">
+              আরও {bnNum(juz.pagesToNext)} পৃষ্ঠা → জুজ {bnNum(juz.done + 1)}
+            </span>
+          )}
+        </div>
       </div>
 
       {open === "top" && (
@@ -234,6 +275,42 @@ export default function StatsMore() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {open === "zikr" && (
+        <section className={panelCls}>
+          <h4 className="text-sm font-semibold">📿 যিকির মোট</h4>
+          <p className="mb-3 text-[10px] text-gray-400">🔒 সম্পূর্ণ প্রাইভেট — শুধু আপনি দেখবেন।</p>
+          {zikrTotals.length === 0 ? (
+            <p className="py-2 text-xs text-gray-400">
+              এখনো কোনো যিকির গণনা হয়নি।
+            </p>
+          ) : (
+            <>
+              <ul className="space-y-1">
+                {zikrTotals.map((z) => (
+                  <li
+                    key={z.id}
+                    className="flex items-center justify-between gap-2 rounded-xl bg-gray-50 px-3 py-2 dark:bg-gray-800/60"
+                  >
+                    <span className="flex-1 truncate text-sm">{z.bn}</span>
+                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                      {bnNum(z.n)} বার
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-2 flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 dark:bg-emerald-900/30">
+                <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                  মোট
+                </span>
+                <span className="text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                  {bnNum(zikrGrand)} বার
+                </span>
+              </div>
+            </>
+          )}
         </section>
       )}
 

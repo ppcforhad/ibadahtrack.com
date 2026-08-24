@@ -5,7 +5,6 @@ import Link from "next/link";
 import { DayLog, Settings, dateKey, getDay, loadDeeds, loadLogs, loadQuranPrefs, loadSettings, saveQuranPrefs, updateDay } from "@/lib/storage";
 import { PRAYER_BN, nextPrayer, todayTimes } from "@/lib/prayers";
 import { currentStreak, dayPoints, monthStats } from "@/lib/scoring";
-import CustomDeeds from "@/components/CustomDeeds";
 import MyAmolList from "@/components/MyAmolList";
 import MonthReport from "@/components/MonthReport";
 import QuranGoalCard from "@/components/QuranGoalCard";
@@ -227,7 +226,6 @@ export default function HomePage() {
         />
       </section>
 
-      {false && <CustomDeeds onChanged={refresh} />}
 
       <section className="grid grid-cols-2 gap-3 pb-2">
         <div className="rounded-2xl border border-gray-200 bg-white p-4 text-center dark:border-gray-800 dark:bg-gray-900">
