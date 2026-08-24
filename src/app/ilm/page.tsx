@@ -1,60 +1,270 @@
 "use client";
 
-import { AYATUL_KURSI, HADITHS, KALIMAS, QULS } from "@/lib/data";
+import { useState } from "react";
+import { AYATUL_KURSI, KALIMAS, QULS } from "@/lib/data";
+import {
+  HADITHS_25,
+  HADITH_THEMES,
+  IMPORTANT_AYAT,
+  MAULIK_ILM,
+  SURAH_FATIHA,
+  type HadithTheme,
+} from "@/lib/ilm";
 
+const bnNum = (n: number) => n.toLocaleString("bn-BD");
+
+type Tab = "quran" | "hadith" | "maulik";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "quran", label: "📖 কুরআন" },
+  { id: "hadith", label: "🕌 হাদিস" },
+  { id: "maulik", label: "📚 মৌলিক ইলম" },
+];
+
+/** ইলম — ৩টি সেকশন: কুরআন (আয়াতুল কুরসি, ফাতিহা, ৪ কুল, ১০ আয়াত),
+ *  হাদিস (২৫টি, ৫ থিম), মৌলিক ইলম (৫ স্তম্ভ, ৭ ঈমান, রাকাত টেবিল, ওজু-গুসল, কালেমা)। */
 export default function IlmPage() {
+  const [tab, setTab] = useState<Tab>("quran");
+  const [theme, setTheme] = useState<HadithTheme | "">("");
+
+  const filteredHadiths = theme === "" ? HADITHS_25 : HADITHS_25.filter((h) => h.theme === theme);
+
   return (
     <>
       <h1 className="mb-3 text-lg font-bold">📚 ইলম</h1>
 
-      <section className="mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <p className="border-b border-gray-100 bg-emerald-50 px-4 py-3 font-semibold text-emerald-800 dark:border-gray-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-          ✨ আয়াতুল কুরসি
-        </p>
-        <p className="arabic-text px-4 py-4 text-right font-semibold leading-loose">{AYATUL_KURSI}</p>
-      </section>
-
-      <details className="mb-2 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <summary className="cursor-pointer list-none px-4 py-3 font-semibold">🕋 ছয় কালেমা</summary>
-        <div className="space-y-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-          {KALIMAS.map((k) => (
-            <div key={k.name}>
-              <p className="mb-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{k.name}</p>
-              <p className="arabic-text mb-1 text-right font-medium">{k.arabic}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{k.meaning}</p>
-            </div>
+      {/* Section tabs */}
+      <div className="sticky top-0 z-10 -mx-4 mb-4 bg-gray-50/95 px-4 py-2 backdrop-blur dark:bg-gray-950/95">
+        <div className="flex gap-2">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={
+                "min-h-[40px] flex-1 rounded-full px-3 text-xs font-semibold transition " +
+                (tab === t.id
+                  ? "bg-emerald-600 text-white shadow"
+                  : "bg-white text-gray-600 dark:bg-gray-900 dark:text-gray-300")
+              }
+            >
+              {t.label}
+            </button>
           ))}
         </div>
-      </details>
+      </div>
 
-      <details className="mb-2 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <summary className="cursor-pointer list-none px-4 py-3 font-semibold">📖 চার কুল শরীফ</summary>
-        <div className="space-y-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-          {QULS.map((s) => (
-            <div key={s.name}>
-              <p className="mb-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{s.name}</p>
-              <p className="arabic-text mb-1 text-right font-medium">{s.arabic}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{s.meaning}</p>
+      {/* ---------------- কুরআন ---------------- */}
+      {tab === "quran" && (
+        <div className="space-y-2 pb-4">
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <p className="border-b border-gray-100 bg-emerald-50 px-4 py-3 font-semibold text-emerald-800 dark:border-gray-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+              ✨ আয়াতুল কুরসি
+            </p>
+            <p className="arabic-text px-4 py-4 text-right font-semibold leading-loose">{AYATUL_KURSI}</p>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center justify-between border-b border-gray-100 bg-emerald-50 px-4 py-3 dark:border-gray-800 dark:bg-emerald-900/30">
+              <span className="font-semibold text-emerald-800 dark:text-emerald-300">📖 {SURAH_FATIHA.name}</span>
+              <span className="text-[10px] text-gray-400">{SURAH_FATIHA.ref}</span>
             </div>
+            <p className="arabic-text px-4 py-4 text-right font-semibold leading-loose">{SURAH_FATIHA.arabic}</p>
+            <p className="border-t border-gray-100 px-4 py-3 text-xs leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400">
+              {SURAH_FATIHA.meaning}
+            </p>
+          </section>
+
+          <details className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <summary className="cursor-pointer list-none px-4 py-3 font-semibold">🕋 ছয় কালেমা</summary>
+            <div className="space-y-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
+              {KALIMAS.map((k) => (
+                <div key={k.name}>
+                  <p className="mb-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{k.name}</p>
+                  <p className="arabic-text mb-1 text-right font-medium">{k.arabic}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{k.meaning}</p>
+                </div>
+              ))}
+            </div>
+          </details>
+
+          <details className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <summary className="cursor-pointer list-none px-4 py-3 font-semibold">📖 চার কুল শরীফ</summary>
+            <div className="space-y-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
+              {QULS.map((s) => (
+                <div key={s.name}>
+                  <p className="mb-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{s.name}</p>
+                  <p className="arabic-text mb-1 text-right font-medium">{s.arabic}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{s.meaning}</p>
+                </div>
+              ))}
+            </div>
+          </details>
+
+          <h3 className="pt-2 text-sm font-semibold text-gray-500 dark:text-gray-400">
+            ১০টি গুরুত্বপূর্ণ আয়াত
+          </h3>
+          {IMPORTANT_AYAT.map((a, i) => (
+            <section key={i} className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex items-center justify-between border-b border-gray-100 bg-emerald-50/60 px-4 py-2.5 dark:border-gray-800 dark:bg-emerald-900/20">
+                <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-bold text-white">{a.ref}</span>
+                <span className="text-[10px] text-gray-400">আয়াত {bnNum(i + 1)}</span>
+              </div>
+              <p className="arabic-text px-4 py-3 text-right font-semibold leading-loose">{a.arabic}</p>
+              <p className="border-t border-gray-100 px-4 py-3 text-xs leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400">
+                {a.meaning}
+              </p>
+            </section>
           ))}
         </div>
-      </details>
+      )}
 
-      <details className="mb-2 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900" open>
-        <summary className="cursor-pointer list-none px-4 py-3 font-semibold">🌿 ১০টি সংক্ষিপ্ত হাদিস</summary>
-        <ol className="space-y-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-          {HADITHS.map((h, i) => (
-            <li key={i} className="flex gap-2 text-sm">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">{i + 1}</span>
-              <span>
-                {h.bn} <span className="text-xs text-gray-400">({h.src})</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </details>
+      {/* ---------------- হাদিস ---------------- */}
+      {tab === "hadith" && (
+        <div className="pb-4">
+          <div className="mb-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => setTheme("")}
+              className={
+                "min-h-[34px] rounded-full px-3 text-xs font-medium " +
+                (theme === "" ? "bg-emerald-600 text-white" : "bg-white text-gray-600 dark:bg-gray-900 dark:text-gray-300")
+              }
+            >
+              সব ({bnNum(HADITHS_25.length)})
+            </button>
+            {HADITH_THEMES.map((t) => {
+              const count = HADITHS_25.filter((h) => h.theme === t).length;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t === theme ? "" : t)}
+                  className={
+                    "min-h-[34px] rounded-full px-3 text-xs font-medium " +
+                    (theme === t ? "bg-emerald-600 text-white" : "bg-white text-gray-600 dark:bg-gray-900 dark:text-gray-300")
+                  }
+                >
+                  {t} ({bnNum(count)})
+                </button>
+              );
+            })}
+          </div>
 
-      <p className="pb-2 pt-1 text-center text-xs text-gray-400">প্রতিদিন একটি করে শিখুন — টিকে থাকবে ইনশাআল্লাহ 🌱</p>
+          <div className="space-y-2">
+            {filteredHadiths.map((h, i) => (
+              <article key={i} className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    {h.theme}
+                  </span>
+                  <span className="text-[10px] text-gray-400">{h.src}</span>
+                </div>
+                <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                  <span className="mr-1.5 inline-grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                    {bnNum(i + 1)}
+                  </span>
+                  {h.bn}
+                </p>
+              </article>
+            ))}
+          </div>
+          <p className="pt-3 text-center text-[11px] text-gray-400">সব হাদিস সহিহ কিতাবসমূহ থেকে যাচাইকৃত 📚</p>
+        </div>
+      )}
+
+      {/* ---------------- মৌলিক ইলম ---------------- */}
+      {tab === "maulik" && (
+        <div className="space-y-2 pb-4">
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-2 font-semibold text-emerald-700 dark:text-emerald-400">🕋 ইসলামের ৫ স্তম্ভ</h3>
+            <ol className="space-y-1.5">
+              {MAULIK_ILM.islam5.map((s, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">{bnNum(i + 1)}</span>
+                  {s}
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-2 font-semibold text-emerald-700 dark:text-emerald-400">💚 ঈমানের ৭টি মৌলিক বিষয়</h3>
+            <ol className="space-y-1.5">
+              {MAULIK_ILM.iman7.map((s, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">{bnNum(i + 1)}</span>
+                  {s}
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="border-b border-gray-100 bg-emerald-50 px-4 py-3 font-semibold text-emerald-800 dark:border-gray-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+              🕐 ৫ ওয়াক্ত নামাজের রাকাত
+            </h3>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-[11px] text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                  <th className="px-4 py-2 font-medium">ওয়াক্ত</th>
+                  <th className="px-2 py-2 font-medium">সুন্নত</th>
+                  <th className="px-4 py-2 font-medium">ফরজ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MAULIK_ILM.rakat.map((r) => (
+                  <tr key={r.waqt} className="border-t border-gray-100 dark:border-gray-800">
+                    <td className="px-4 py-2.5 font-semibold">{r.waqt}</td>
+                    <td className="px-2 py-2.5 text-xs text-gray-500 dark:text-gray-400">{r.sunnah}</td>
+                    <td className="px-4 py-2.5 font-bold text-emerald-600">{r.fard}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-2 font-semibold text-emerald-700 dark:text-emerald-400">💧 ওজুর ফরজ (৪টি)</h3>
+            <ol className="space-y-1.5">
+              {MAULIK_ILM.wudu4.map((s, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">{bnNum(i + 1)}</span>
+                  {s}
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-2 font-semibold text-emerald-700 dark:text-emerald-400">🚿 গুসলের ফরজ (৩টি)</h3>
+            <ol className="space-y-1.5">
+              {MAULIK_ILM.gusal3.map((s, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">{bnNum(i + 1)}</span>
+                  {s}
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <summary className="block border-b border-gray-100 bg-emerald-50 px-4 py-3 font-semibold text-emerald-800 dark:border-gray-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+              🕋 ছয় কালেমা
+            </summary>
+            <div className="space-y-3 px-4 py-3">
+              {KALIMAS.map((k) => (
+                <div key={k.name}>
+                  <p className="mb-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{k.name}</p>
+                  <p className="arabic-text mb-1 text-right font-medium">{k.arabic}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{k.meaning}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      <p className="pb-2 pt-1 text-center text-xs text-gray-400">
+        প্রতিদিন একটি করে শিখুন — টিকে থাকবে ইনশাআল্লাহ 🌱
+      </p>
     </>
   );
 }
