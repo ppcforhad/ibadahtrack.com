@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { surahAyahs, surahName } from "@/lib/surahs";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
 
@@ -37,6 +38,17 @@ export default function QuranGoalCard({
   const step = (v: number, d: number, lo: number, hi: number) =>
     Math.max(lo, Math.min(hi, v + d));
 
+  const changeSurah = (d: number) => {
+    const next = step(surah, d, 1, 114);
+    setSurah(next);
+    setAyah((a) => Math.min(a, surahAyahs(next)));
+  };
+  const changeAyah = (d: number) =>
+    setAyah((a) => step(a, d, 1, surahAyahs(surah)));
+
+  const shownSurah = saved ? surah : (lastSurah ?? 0);
+  const shownAyah = saved ? ayah : (lastAyah ?? 0);
+
   return (
     <div className="mt-3 rounded-2xl bg-emerald-50 p-3 dark:bg-emerald-900/30">
       {/* Goal ring / bar */}
@@ -63,19 +75,19 @@ export default function QuranGoalCard({
       {/* Resume position */}
       <p className="mb-2 mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400">শেষ অবস্থান</p>
       <div className="flex items-stretch gap-2">
-        <div className="flex flex-1 items-center justify-between rounded-xl border border-gray-200 bg-white px-2 dark:border-gray-700 dark:bg-gray-900">
-          <button type="button" aria-label="সূরা কমান" onClick={() => setSurah((s) => step(s, -1, 1, 114))} className="h-11 w-8 text-lg text-gray-500 active:scale-95">−</button>
-          <span className="text-center text-xs text-gray-400">
-            সূরা<span className="block text-base font-bold tabular-nums text-gray-900 dark:text-gray-100">{bnNum(surah)}</span>
+        <div className="flex min-w-0 flex-1 items-center justify-between rounded-xl border border-gray-200 bg-white px-2 dark:border-gray-700 dark:bg-gray-900">
+          <button type="button" aria-label="সূরা কমান" onClick={() => changeSurah(-1)} className="h-11 w-8 shrink-0 text-lg text-gray-500 active:scale-95">−</button>
+          <span className="min-w-0 flex-1 text-center text-[11px] text-gray-400">
+            সূরা<span className="block truncate text-sm font-bold text-gray-900 dark:text-gray-100">{surahName(surah)}</span>
           </span>
-          <button type="button" aria-label="সূরা বাড়ান" onClick={() => setSurah((s) => step(s, 1, 1, 114))} className="h-11 w-8 text-lg text-emerald-600 active:scale-95">+</button>
+          <button type="button" aria-label="সূরা বাড়ান" onClick={() => changeSurah(1)} className="h-11 w-8 shrink-0 text-lg text-emerald-600 active:scale-95">+</button>
         </div>
-        <div className="flex flex-1 items-center justify-between rounded-xl border border-gray-200 bg-white px-2 dark:border-gray-700 dark:bg-gray-900">
-          <button type="button" aria-label="আয়াত কমান" onClick={() => setAyah((a) => step(a, -1, 1, 286))} className="h-11 w-8 text-lg text-gray-500 active:scale-95">−</button>
-          <span className="text-center text-xs text-gray-400">
-            আয়াত<span className="block text-base font-bold tabular-nums text-gray-900 dark:text-gray-100">{bnNum(ayah)}</span>
+        <div className="flex min-w-0 flex-1 items-center justify-between rounded-xl border border-gray-200 bg-white px-2 dark:border-gray-700 dark:bg-gray-900">
+          <button type="button" aria-label="আয়াত কমান" onClick={() => changeAyah(-1)} className="h-11 w-8 shrink-0 text-lg text-gray-500 active:scale-95">−</button>
+          <span className="min-w-0 flex-1 text-center text-[11px] text-gray-400">
+            আয়াত<span className="block text-sm font-bold tabular-nums text-gray-900 dark:text-gray-100">{bnNum(ayah)}</span>
           </span>
-          <button type="button" aria-label="আয়াত বাড়ান" onClick={() => setAyah((a) => step(a, 1, 1, 286))} className="h-11 w-8 text-lg text-emerald-600 active:scale-95">+</button>
+          <button type="button" aria-label="আয়াত বাড়ান" onClick={() => changeAyah(1)} className="h-11 w-8 shrink-0 text-lg text-emerald-600 active:scale-95">+</button>
         </div>
       </div>
       <button
@@ -84,9 +96,9 @@ export default function QuranGoalCard({
       >
         💾 অবস্থান সেভ করুন
       </button>
-      {(saved || (lastSurah && lastAyah)) && (
+      {shownSurah > 0 && (
         <p className="mt-2 text-center text-xs font-medium text-emerald-700 dark:text-emerald-300">
-          যেখানে থেমেছিলেন: সূরা {bnNum(saved ? surah : (lastSurah as number))}, আয়াত {bnNum(saved ? ayah : (lastAyah as number))}
+          যেখানে থেমেছিলেন: সূরা {surahName(shownSurah)}, আয়াত {bnNum(shownAyah)}
         </p>
       )}
     </div>
