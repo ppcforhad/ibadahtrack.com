@@ -1,0 +1,16 @@
+{
+  "name": "Ibadah Tracker - ইবাদাত ট্র্যাকার",
+  "short_name": "Ibadah",
+  "description": "নামাজ, যিকির, দুআ ও কুরআন ট্র্যাকিং - দৈনিক ইবাদাত সঙ্গী",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f9fafb",
+  "theme_color": "#059669",
+  "lang": "bn",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
