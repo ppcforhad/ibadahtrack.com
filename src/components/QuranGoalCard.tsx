@@ -121,7 +121,7 @@ export default function QuranGoalCard({
           {open && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-              <div className="fixed inset-x-3 z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900" style={{ top: "auto", maxWidth: "24rem", marginInline: "auto" }}>
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
                 <div className="border-b border-gray-100 p-2 dark:border-gray-800">
                   <input
                     value={q}
