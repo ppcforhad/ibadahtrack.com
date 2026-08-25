@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DayLog, dateKey, getDay, loadCustomZikr, loadZikrPrefs, saveCustomZikr, saveZikrPrefs, updateDay } from "@/lib/storage";
 import { ZIKR_PRESETS, ZikrPreset } from "@/lib/data";
 
-const TARGETS = [33, 99, 100];
+const TARGETS = [1, 3, 7, 11, 21, 33, 34, 41, 99, 100, 1000];
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
 
 /** Category display order for the optgroup dropdown. */

@@ -129,7 +129,7 @@ export default function QuranReader() {
   const content = READABLE[current];
 
   return (
-    <div className="flex h-[calc(100vh-15rem)] min-h-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950">
+    <div className="flex h-[calc(100vh-11.5rem)] min-h-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
         <div className="flex items-center gap-2">
