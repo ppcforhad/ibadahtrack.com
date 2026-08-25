@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { KALIMAS } from "@/lib/data";
 import QuranReader from "./quran-reader";
+import HadithSection from "@/components/HadithSection";
 import {
   HADITHS_25,
-  HADITH_THEMES,
   MAULIK_ILM,
-  type HadithTheme,
 } from "@/lib/ilm";
 
 const bnNum = (n: number) => n.toLocaleString("bn-BD");
@@ -24,9 +23,6 @@ const TABS: { id: Tab; label: string }[] = [
  *  হাদিস (২৫টি, ৫ থিম), মৌলিক ইলম (৫ স্তম্ভ, ৭ ঈমান, রাকাত টেবিল, ওজু-গুসল, কালেমা)। */
 export default function IlmPage() {
   const [tab, setTab] = useState<Tab>("quran");
-  const [theme, setTheme] = useState<HadithTheme | "">("");
-
-  const filteredHadiths = theme === "" ? HADITHS_25 : HADITHS_25.filter((h) => h.theme === theme);
 
   return (
     <>
@@ -57,57 +53,8 @@ export default function IlmPage() {
         <QuranReader />
       )}
 
-      {/* ---------------- হাদিস ---------------- */}
-      {tab === "hadith" && (
-        <div className="pb-4">
-          <div className="mb-3 flex flex-wrap gap-2">
-            <button
-              onClick={() => setTheme("")}
-              className={
-                "min-h-[34px] rounded-full px-3 text-xs font-medium " +
-                (theme === "" ? "bg-emerald-600 text-white" : "bg-white text-gray-600 dark:bg-gray-900 dark:text-gray-300")
-              }
-            >
-              সব ({bnNum(HADITHS_25.length)})
-            </button>
-            {HADITH_THEMES.map((t) => {
-              const count = HADITHS_25.filter((h) => h.theme === t).length;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t === theme ? "" : t)}
-                  className={
-                    "min-h-[34px] rounded-full px-3 text-xs font-medium " +
-                    (theme === t ? "bg-emerald-600 text-white" : "bg-white text-gray-600 dark:bg-gray-900 dark:text-gray-300")
-                  }
-                >
-                  {t} ({bnNum(count)})
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="space-y-2">
-            {filteredHadiths.map((h, i) => (
-              <article key={i} className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                    {h.theme}
-                  </span>
-                  <span className="text-[10px] text-gray-400">{h.src}</span>
-                </div>
-                <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-                  <span className="mr-1.5 inline-grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
-                    {bnNum(i + 1)}
-                  </span>
-                  {h.bn}
-                </p>
-              </article>
-            ))}
-          </div>
-          <p className="pt-3 text-center text-[11px] text-gray-400">সব হাদিস সহিহ কিতাবসমূহ থেকে যাচাইকৃত 📚</p>
-        </div>
-      )}
+      {/* ---------------- হাদিস (dropdown + reader cards) ---------------- */}
+      {tab === "hadith" && <HadithSection />}
 
       {/* ---------------- মৌলিক ইলম ---------------- */}
       {tab === "maulik" && (
